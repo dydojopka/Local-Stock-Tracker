@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Текущие запасы продуктов</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f8f9fa; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow-x: auto; }
+
+        .nav-menu { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #eee; }
+        .nav-menu a { margin-right: 15px; text-decoration: none; color: #007bff; font-weight: bold; font-size: 18px; }
+
+        h2 { color: #333; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; table-layout: fixed; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; word-wrap: break-word; }
+        th { background-color: #007bff; color: white; }
+        .expired { background-color: #f8d7da; color: #721c24; font-weight: bold; }
+        .btn { display: inline-block; padding: 10px 15px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px; margin-bottom: 15px; }
+        .btn:hover { background-color: #218838; }
+        .success-msg { color: #155724; background-color: #d4edda; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div th:replace="~{fragments/header :: nav-menu(activePage='products')}"></div>
+
+    <h2>Текущие запасы продуктов (Склад)</h2>
+
+    <div th:if="${param.success}" class="success-msg">
+        Новая партия продукта успешно поставлена на учет!
+    </div>
+    <div th:if="${param.writeOffSuccess}" class="success-msg">
+        Успешно списано!
+    </div>
+
+    <a th:href="@{/products/add}" class="btn">+ Добавить продукт</a>
+
+    <table>
+        <thead>
+        <tr>
+            <th>ID партии</th>
+            <th>Наименование товара</th>
+            <th>Штрих-код</th>
+            <th>Количество</th>
+            <th>Дата добавления</th>
+            <th>Срок годности</th>
+            <th>Статус</th>
+            <th>Действия</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="product : ${products}" th:classappend="${product.isExpired()} ? 'expired' : ''">
+            <td th:text="${product.id}">1</td>
+            <td th:text="${product.productInfo.name}">Молоко</td>
+            <td th:text="${product.productInfo.barcode}">123456</td>
+            <td th:text="${product.quantity}">2.0</td>
+            <td th:text="${product.addedDate}">2026-05-23</td>
+            <td th:text="${product.expiryDate}">2026-05-30</td>
+            <td>
+                <span th:if="${product.isExpired()}">ПРОСРОЧЕНО</span>
+                <span th:unless="${product.isExpired()}">Норма</span>
+            </td>
+            <td>
+                <a th:href="@{/products/write-off/{id}(id=${product.id})}"
+                   class="btn" style="background-color: #ffc107; color: black; padding: 5px 10px;">Списать
+                </a>
+            </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(products)}">
+            <td colspan="8" style="text-align: center; color: #777;">На складе пока нет продуктов.</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>

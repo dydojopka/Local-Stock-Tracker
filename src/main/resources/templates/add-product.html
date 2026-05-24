@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Добавление продукта в запас</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input, select { padding: 8px; width: 300px; }
+        button { padding: 10px 15px; background-color: #28a745; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #218838; }
+        .success-msg { color: green; font-weight: bold; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<h2>Добавление продукта в запас</h2>
+
+<div th:if="${param.success}" class="success-msg">
+    Информация о партии продукта успешно сохранена!
+</div>
+
+<form th:action="@{/products/add}" method="post">
+
+    <div class="form-group">
+        <label for="productInfoId">Продукт (из справочника):</label>
+        <select id="productInfoId" name="productInfoId" required>
+            <option value="">Выберите продукт...</option>
+            <option th:each="info : ${productInfos}"
+                    th:value="${info.id}"
+                    th:text="${info.name}">Название продукта</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="quantity">Количество:</label>
+        <input type="number" step="0.1" id="quantity" name="quantity" required>
+    </div>
+
+    <div class="form-group">
+        <label for="expiryDate">Срок годности:</label>
+        <input type="date" id="expiryDate" name="expiryDate" required>
+    </div>
+
+    <button type="submit">Сохранить</button>
+</form>
+
+</body>
+</html>

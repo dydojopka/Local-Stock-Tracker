@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Списки покупок</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f8f9fa; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+        .nav-menu { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #eee; }
+        .nav-menu a { margin-right: 15px; text-decoration: none; color: #007bff; font-weight: bold; font-size: 18px; }
+
+        /* Стили кнопок */
+        .btn { display: inline-block; padding: 10px 15px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; border: none; cursor: pointer; }
+        .btn:hover { background-color: #0056b3; }
+
+        .action-btn { padding: 6px 12px; margin-right: 5px; border: none; border-radius: 4px; cursor: pointer; color: white; font-size: 14px; }
+        .btn-copy { background-color: #28a745; }
+        .btn-copy:hover { background-color: #218838; }
+        .btn-download { background-color: #17a2b8; }
+        .btn-download:hover { background-color: #138496; }
+        .btn-delete { background-color: #dc3545; }
+        .btn-delete:hover { background-color: #c82333; }
+
+        /* Сообщения */
+        .success-msg { color: #155724; background-color: #d4edda; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
+        .info-msg { color: #0c5460; background-color: #d1ecf1; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
+        .delete-msg { color: #856404; background-color: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
+
+        .list-card { border: 1px solid #ccc; padding: 15px; margin-top: 15px; border-radius: 5px; background-color: #fdfdfd; }
+        ul { margin-top: 10px; list-style-type: square; }
+        li { margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div th:replace="~{fragments/header :: nav-menu(activePage='shopping')}"></div>
+
+    <h2>Списки покупок</h2>
+
+    <div th:if="${param.success != null}" class="success-msg">Список покупок успешно сгенерирован!</div>
+    <div th:if="${param.notNeeded != null}" class="info-msg">Запасы в норме, генерация не требуется.</div>
+    <div th:if="${param.deleted != null}" class="delete-msg">Список успешно удален.</div>
+
+    <form th:action="@{/shopping/generate}" method="post" style="margin-bottom: 20px;">
+        <button type="submit" class="btn">Сгенерировать новый список</button>
+    </form>
+
+    <div th:if="${#lists.isEmpty(shoppingLists)}">
+        <p style="color: #777;">У вас пока нет списков покупок.</p>
+    </div>
+
+    <div th:each="list : ${shoppingLists}" class="list-card" th:id="'list-' + ${list.id}">
+        <h3>Список от <span th:text="${list.createdDate}"></span></h3>
+        <p style="color: #666; font-size: 0.9em; margin-top: 0;">Статус: <span th:text="${list.status}"></span></p>
+
+        <ul th:id="'items-' + ${list.id}">
+            <li th:each="item : ${list.items}">
+                <strong th:text="${item.productInfo.name}">Наименование</strong> — купить: <span th:text="${item.targetQuantity}">0</span> шт.
+            </li>
+        </ul>
+
+        <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px;">
+            <button type="button" class="action-btn btn-copy" th:onclick="'copyList(' + ${list.id} + ')'">📋 Скопировать</button>
+            <button type="button" class="action-btn btn-download" th:onclick="'downloadList(' + ${list.id} + ')'">⬇️ Скачать</button>
+
+            <form th:action="@{/shopping/delete/{id}(id=${list.id})}" method="post" style="display:inline-block; margin-left: 15px;">
+                <button type="submit" class="action-btn btn-delete" onclick="return confirm('Вы уверены, что хотите удалить этот список?');">🗑️ Удалить</button>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Вспомогательная функция для формирования красивого текста списка
+    function getListText(listId) {
+        const listCard = document.getElementById('list-' + listId);
+        let text = listCard.querySelector('h3').innerText + '\n';
+        text += '-----------------------\n';
+
+        const items = document.getElementById('items-' + listId).querySelectorAll('li');
+        items.forEach(item => {
+            // Очищаем текст от лишних отступов
+            let itemText = item.innerText.replace(/\s+/g, ' ').trim();
+            text += '- ' + itemText + '\n';
+        });
+        return text;
+    }
+
+    // Функция копирования в буфер обмена
+    function copyList(listId) {
+        const text = getListText(listId);
+        navigator.clipboard.writeText(text).then(() => {
+            alert('Список скопирован в буфер обмена!');
+        }).catch(err => {
+            console.error('Ошибка копирования: ', err);
+            alert('Не удалось скопировать список.');
+        });
+    }
+
+    // Функция скачивания .txt файла
+    function downloadList(listId) {
+        const text = getListText(listId);
+        // Создаем виртуальный файл (Blob) в памяти браузера
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+
+        // Создаем невидимую ссылку и "кликаем" по ней
+        const a = document.createElement('a');
+        a.href = url;
+        // Задаем имя скачиваемого файла (например, list_2023-10-25.txt)
+        const dateStr = new Date().toISOString().slice(0, 10);
+        a.download = 'Список_покупок_' + dateStr + '.txt';
+
+        document.body.appendChild(a);
+        a.click();
+
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+</script>
+
+</body>
+</html>

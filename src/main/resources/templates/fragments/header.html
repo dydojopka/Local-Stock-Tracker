@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <style>
+        .nav-menu { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #eee; }
+        .nav-menu a { margin-right: 15px; text-decoration: none; color: #007bff; font-weight: bold; font-size: 18px; }
+    </style>
+</head>
+
+<body>
+<div th:fragment="nav-menu(activePage)" class="nav-menu">
+    <a th:href="@{/products}"
+       th:style="${activePage == 'products'} ? 'color: #333; pointer-events: none;' : 'color: #007bff;'">📦 Мой склад</a>
+
+    <a th:href="@{/shopping}"
+       th:style="${activePage == 'shopping'} ? 'color: #333; pointer-events: none;' : 'color: #007bff;'">🛒 Списки покупок</a>
+
+    <a th:href="@{/notifications}"
+       th:style="${activePage == 'notifications'} ? 'color: #333; pointer-events: none;' : 'color: #007bff;'">⚠️ Уведомления</a>
+
+    <a th:href="@{/catalog}"
+       th:style="${activePage == 'catalog'} ? 'color: #333; pointer-events: none;' : 'color: #007bff;'">⚙️ Справочник</a>
+</div>
+</body>
+</html>
