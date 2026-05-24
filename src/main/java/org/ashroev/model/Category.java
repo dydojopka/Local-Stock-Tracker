@@ -1,17 +1,9 @@
 package org.ashroev.model;
 
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-/*
-Класс группирует товары по логическим признакам. У него есть идентификатор и наименование
- */
+import jakarta.persistence.*; // Если у тебя старая версия Spring Boot, здесь будет javax.persistence.*
 
 @Entity
 @Table(name = "categories")
-@Data
-@NoArgsConstructor
 public class Category {
 
     @Id
@@ -20,4 +12,38 @@ public class Category {
 
     @Column(nullable = false, unique = true)
     private String name;
+
+    @Column(name = "description")
+    private String description;
+
+    // Пустой конструктор (обязателен для Hibernate)
+    public Category() {
+    }
+
+    // --- Геттеры и Сеттеры ---
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    // Тот самый метод, на отсутствие которого ругалась Java
+    public void setDescription(String description) {
+        this.description = description;
+    }
 }

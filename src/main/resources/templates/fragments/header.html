@@ -1,18 +1,52 @@
 <!DOCTYPE html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <body>
-<div th:fragment="nav-menu(activePage)" class="nav-menu">
+<div th:fragment="nav-menu(activePage)" class="nav-menu"
+     style="
+     display: flex;
+     align-items: center;
+     justify-content: flex-start;
+     gap: 12px; flex-wrap: nowrap;
+     background-color: #f8f9fa;
+     padding: 10px 15px;
+     border-radius: 6px;
+     border: 1px solid #e3e6f0;
+     margin-bottom: 20px;">
+
+    <a th:href="@{/}"
+       th:style="${activePage == '' || activePage == 'home'} ?
+       'color: #333; font-weight: bold; pointer-events: none; text-decoration: none;' :
+       'color: #007bff; text-decoration: none;'"
+    >🏠 Главная</a>
+
     <a th:href="@{/products}"
-       th:style="${activePage == 'products'} ? 'color: #333; pointer-events: none;' : 'color: #007bff;'">📦 Мой склад</a>
+       th:style="${activePage == 'products'} ?
+       'color: #333; font-weight: bold; pointer-events: none; text-decoration: none;' :
+       'color: #007bff; text-decoration: none;'"
+    >📦 Мой склад</a>
 
     <a th:href="@{/shopping}"
-       th:style="${activePage == 'shopping'} ? 'color: #333; pointer-events: none;' : 'color: #007bff;'">🛒 Списки покупок</a>
+       th:style="${activePage == 'shopping'} ?
+       'color: #333; font-weight: bold; pointer-events: none; text-decoration: none;' :
+       'color: #007bff; text-decoration: none;'"
+    >🛒 Списки покупок</a>
 
     <a th:href="@{/notifications}"
-       th:style="${activePage == 'notifications'} ? 'color: #333; pointer-events: none;' : 'color: #007bff;'">⚠️ Уведомления</a>
+       th:style="${activePage == 'notifications'} ?
+       'color: #333; font-weight: bold; pointer-events: none; text-decoration: none;' :
+       'color: #007bff; text-decoration: none;'"
+    >⚠️ Уведомления</a>
 
-    <a th:href="@{/catalog}"
-       th:style="${activePage == 'catalog'} ? 'color: #333; pointer-events: none;' : 'color: #007bff;'">⚙️ Справочник</a>
+    <a th:href="@{/categories}"
+       th:style="${activePage == 'categories'} ?
+       'color: #333; font-weight: bold; pointer-events: none; text-decoration: none;' :
+       'color: #007bff; text-decoration: none;'"
+    >🏷️ Категории</a>
+
+    <a th:href="@{/directory}"
+       th:style="${activePage == 'directory'} ? 'color: #333; font-weight: bold; pointer-events: none; text-decoration: none;' : 'color: #007bff; text-decoration: none;'"
+    >🗂️ Продукты</a>
+
 </div>
 </body>
 </html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Справочник продуктов</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="container">
+    <div th:replace="~{fragments/header :: nav-menu(activePage='directory')}"></div>
+
+    <h2>Справочник продуктов</h2>
+
+    <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #ddd;">
+        <h3>Добавить продукт в справочник</h3>
+        <form th:action="@{/directory/add}" method="post">
+            <div class="form-group">
+                <label for="name">Название продукта:</label>
+                <input type="text" id="name" name="name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="categoryId">Категория:</label>
+                <select id="categoryId" name="categoryId" class="form-control" required>
+                    <option value="">Выберите категорию...</option>
+                    <option th:each="cat : ${categories}"
+                            th:value="${cat.id}"
+                            th:text="${cat.name}">Категория
+                    </option>
+                </select>
+            </div>
+            <button type="submit" class="btn-submit">Сохранить</button>
+        </form>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Название</th>
+            <th>Категория</th>
+            <th style="width: 100px; text-align: center;">Действия</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${#lists.isEmpty(productInfos)}">
+            <td colspan="4" style="text-align: center;">Справочник пуст. Добавьте первый продукт!</td>
+        </tr>
+        <tr th:each="info : ${productInfos}">
+            <td th:text="${info.id}"></td>
+            <td th:text="${info.name}"></td>
+            <td th:text="${info.category != null ? info.category.name : 'Без категории'}"></td>
+            <td style="text-align: center;">
+                <form th:action="@{/directory/delete}" method="post" style="display: inline;">
+                    <input type="hidden" name="id" th:value="${info.id}">
+                    <button type="submit" class="action-btn btn-delete"
+                            onclick="return confirm('Удалить этот продукт из справочника?');">Удалить
+                    </button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
