@@ -27,11 +27,15 @@ public class CategoryController {
     // Добавление новой категории
     @PostMapping("/add")
     public String addCategory(@RequestParam String name, @RequestParam(required = false) String description) {
-        Category category = new Category();
-        category.setName(name);
-        category.setDescription(description);
-        categoryRepository.save(category);
-        return "redirect:/categories";
+        try {
+            Category category = new Category();
+            category.setName(name);
+            category.setDescription(description);
+            categoryRepository.save(category);
+            return "redirect:/categories";
+        } catch (Exception e) {
+            return "redirect:/categories?error";
+        }
     }
 
     // Удаление категории

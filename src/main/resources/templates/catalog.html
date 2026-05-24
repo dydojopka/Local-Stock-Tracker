@@ -7,40 +7,44 @@
 </head>
 <body>
 
-<div class="container">
+<div class="page-wrapper">
     <div th:replace="~{fragments/header :: nav-menu(activePage='catalog')}"></div>
 
-    <h2>Справочник продуктов и настройки остатков</h2>
-    <p>Здесь вы можете установить минимальный порог. Если запасы опустятся ниже этого значения, система предложит добавить продукт в список покупок.</p>
+    <div class="container">
+        <h2>Настройки остатков</h2>
+        <p>Здесь вы можете установить минимальный порог. Если запасы опустятся ниже этого значения, система предложит
+            добавить продукт в список покупок.</p>
 
-    <table>
-        <thead>
-        <tr>
-            <th>Наименование</th>
-            <th>Штрихкод</th>
-            <th>Категория</th>
-            <th>Минимальный остаток</th>
-            <th>Действие</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="info : ${catalogItems}">
-            <td th:text="${info.name}">Молоко</td>
-            <td th:text="${info.barcode}">123456</td>
-            <td th:text="${info.category != null ? info.category.name : 'Без категории'}">Молочка</td>
+        <table>
+            <thead>
+            <tr>
+                <th>Наименование</th>
+                <th>Штрихкод</th>
+                <th>Категория</th>
+                <th>Минимальный остаток</th>
+                <th>Действие</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="info : ${catalogItems}">
+                <td th:text="${info.name}">Молоко</td>
+                <td th:text="${info.barcode}">123456</td>
+                <td th:text="${info.category != null ? info.category.name : 'Без категории'}">Молочка</td>
 
-            <form th:action="@{/catalog/update-min-quantity}" method="post">
-                <td>
-                    <input type="hidden" name="id" th:value="${info.id}" />
-                    <input type="number" step="0.1" min="0" name="minQuantity" th:value="${info.minQuantity}" required />
-                </td>
-                <td>
-                    <button type="submit" class="btn-save">💾 Сохранить</button>
-                </td>
-            </form>
-        </tr>
-        </tbody>
-    </table>
+                <form th:action="@{/catalog/update-min-quantity}" method="post">
+                    <td>
+                        <input type="hidden" name="id" th:value="${info.id}"/>
+                        <input type="number" step="0.1" min="0" name="minQuantity" th:value="${info.minQuantity}"
+                               required/>
+                    </td>
+                    <td>
+                        <button type="submit" class="btn-save">💾 Сохранить</button>
+                    </td>
+                </form>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 </body>

@@ -6,43 +6,45 @@
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-
-<div class="container">
+<div class="page-wrapper">
     <div th:replace="~{fragments/header :: nav-menu(activePage='products')}"></div>
 
-    <h2>Списание продукта</h2>
-    <p><strong>Товар:</strong> <span th:text="${product.productInfo.name}"></span></p>
-    <p><strong>Текущий остаток:</strong> <span th:text="${product.quantity}"></span></p>
+    <div class="container">
+        <h2>Списание продукта</h2>
+        <p><strong>Товар:</strong> <span th:text="${product.productInfo.name}"></span></p>
+        <p><strong>Текущий остаток:</strong> <span th:text="${product.quantity}"></span></p>
 
-    <div th:if="${param.error}" class="error-msg">
-        Ошибка: Введенное количество превышает остаток!
-    </div>
+        <div th:if="${param.error}" class="error-msg">
+            Ошибка: Введенное количество превышает остаток!
+        </div>
 
-    <form th:action="@{/products/write-off}" method="post">
-        <input type="hidden" name="productId" th:value="${product.id}">
+        <form th:action="@{/products/write-off}" method="post">
+            <input type="hidden" name="productId" th:value="${product.id}">
 
-        <div class="form-group">
-            <label for="amount">Количество к списанию:</label>
-            <div class="input-group">
-                <input type="number" step="0.01" id="amount" name="amount" class="form-control" required min="0.01">
+            <div class="form-group">
+                <label for="amount">Количество к списанию:</label>
+                <div class="input-group">
+                    <input type="number" step="0.01" id="amount" name="amount" class="form-control" required min="0.01">
 
-                <button type="button" class="btn-secondary" th:onclick="|document.getElementById('amount').value = ${product.quantity}|">
-                    Списать всё
-                </button>
+                    <button type="button" class="btn-secondary"
+                            th:onclick="|document.getElementById('amount').value = ${product.quantity}|">
+                        Списать всё
+                    </button>
+                </div>
             </div>
-        </div>
 
-        <div class="form-group">
-            <label for="reason">Причина списания:</label>
-            <select id="reason" name="reason" class="form-control" required>
-                <option value="Использовано">Использовано</option>
-                <option value="Испорчено">Испорчено</option>
-            </select>
-        </div>
+            <div class="form-group">
+                <label for="reason">Причина списания:</label>
+                <select id="reason" name="reason" class="form-control" required>
+                    <option value="Использовано">Использовано</option>
+                    <option value="Испорчено">Испорчено</option>
+                </select>
+            </div>
 
-        <button type="submit" class="btn-submit">Списать</button>
-        <a th:href="@{/products}" class="btn-cancel">Отмена</a>
-    </form>
+            <button type="submit" class="btn-submit">Списать</button>
+            <a th:href="@{/products}" class="btn-cancel">Отмена</a>
+        </form>
+    </div>
 </div>
 </body>
 </html>

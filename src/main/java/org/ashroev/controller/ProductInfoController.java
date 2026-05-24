@@ -9,10 +9,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @Controller
-@RequestMapping("/directory") // путь в браузере будет /directory
+@RequestMapping("/directory")
 public class ProductInfoController {
 
     @Autowired
@@ -21,31 +19,46 @@ public class ProductInfoController {
     @Autowired
     private CategoryRepository categoryRepository;
 
-    // Отображение списка справочника
     @GetMapping
     public String listProductInfos(Model model) {
         model.addAttribute("productInfos", productInfoRepository.findAll());
-        // Передаем список категорий для выпадающего списка в форме добавления
         model.addAttribute("categories", categoryRepository.findAll());
         return "product-infos";
     }
 
-    // Добавление новой записи в справочник
     @PostMapping("/add")
-    public String addProductInfo(@RequestParam String name,
-                                 @RequestParam Integer categoryId) {
-        ProductInfo info = new ProductInfo();
-        info.setName(name);
+    public String addProductInfo(
+            @RequestParam String name,
+            @RequestParam(required = false) String barcode,
+            @RequestParam Double minQuantity,
+            @RequestParam Integer categoryId) {
 
-        // Находим категорию по ID и привязываем к продукту
-        Category category = categoryRepository.findById(categoryId).orElse(null);
-        info.setCategory(category);
+        if (minQuantity != null && minQuantity < 0) {
+            return "redirect:/directory?error=negative";
+        }
 
-        productInfoRepository.save(info);
-        return "redirect:/directory";
+        if (barcode != null && barcode.trim().isEmpty()) {
+            barcode = null;
+        }
+
+        try {
+            Category category = categoryRepository.findById(categoryId)
+                    .orElseThrow(() -> new IllegalArgumentException("Категория не найдена"));
+
+            ProductInfo info = new ProductInfo();
+            info.setName(name);
+            info.setBarcode(barcode);
+            info.setMinQuantity(minQuantity);
+            info.setCategory(category);
+
+            productInfoRepository.save(info);
+            return "redirect:/directory?success";
+
+        } catch (Exception e) {
+            return "redirect:/directory?error=duplicate_barcode";
+        }
     }
 
-    // Удаление записи из справочника
     @PostMapping("/delete")
     public String deleteProductInfo(@RequestParam Integer id) {
         productInfoRepository.deleteById(id);

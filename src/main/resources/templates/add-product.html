@@ -6,41 +6,43 @@
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-<div class="container">
+<div class="page-wrapper">
     <div th:replace="~{fragments/header :: nav-menu(activePage='products')}"></div>
 
-    <h2>Добавление продукта в запас</h2>
+    <div class="container">
+        <h2>Добавление продукта в запас</h2>
 
-    <div th:if="${param.success}" class="success-msg">
-        Информация о партии продукта успешно сохранена!
+        <div th:if="${param.success}" class="success-msg">
+            Информация о партии продукта успешно сохранена!
+        </div>
+
+        <form th:action="@{/products/add}" method="post">
+
+            <div class="form-group">
+                <label for="productInfoId">Продукт (из справочника):</label>
+                <select id="productInfoId" name="productInfoId" class="form-control" required>
+                    <option value="">Выберите продукт...</option>
+                    <option th:each="info : ${productInfos}"
+                            th:value="${info.id}"
+                            th:text="${info.name}">Название продукта
+                    </option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="quantity">Количество:</label>
+                <input type="number" step="0.1" id="quantity" name="quantity" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="expiryDate">Срок годности:</label>
+                <input type="date" id="expiryDate" name="expiryDate" class="form-control" required>
+            </div>
+
+            <button type="submit" class="btn-submit">Сохранить</button>
+            <a th:href="@{/products}" class="btn-cancel">Отмена</a>
+        </form>
     </div>
-
-    <form th:action="@{/products/add}" method="post">
-
-        <div class="form-group">
-            <label for="productInfoId">Продукт (из справочника):</label>
-            <select id="productInfoId" name="productInfoId" class="form-control" required>
-                <option value="">Выберите продукт...</option>
-                <option th:each="info : ${productInfos}"
-                        th:value="${info.id}"
-                        th:text="${info.name}">Название продукта
-                </option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="quantity">Количество:</label>
-            <input type="number" step="0.1" id="quantity" name="quantity" class="form-control" required>
-        </div>
-
-        <div class="form-group">
-            <label for="expiryDate">Срок годности:</label>
-            <input type="date" id="expiryDate" name="expiryDate" class="form-control" required>
-        </div>
-
-        <button type="submit" class="btn-submit">Сохранить</button>
-        <a th:href="@{/products}" class="btn-cancel">Отмена</a>
-    </form>
 </div>
 </body>
 </html>

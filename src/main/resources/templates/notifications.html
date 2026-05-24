@@ -7,37 +7,39 @@
 </head>
 <body>
 
-<div class="container">
+<div class="page-wrapper">
     <div th:replace="~{fragments/header :: nav-menu(activePage='notifications')}"></div>
 
-    <h2>Уведомления о сроках годности</h2>
+    <div class="container">
+        <h2>Уведомления о сроках годности</h2>
 
-    <div th:if="${!#lists.isEmpty(expiredProducts)}" class="alert-danger">
-        <strong>‼️ Внимание! Следующие продукты просрочены и подлежат списанию:</strong>
-        <ul>
-            <li th:each="product : ${expiredProducts}">
-                <span th:text="${product.productInfo.name}"></span>
-                (Остаток: <span th:text="${product.quantity}"></span> шт.) -
-                истек <strong th:text="${product.expiryDate}"></strong>
-            </li>
-        </ul>
+        <div th:if="${!#lists.isEmpty(expiredProducts)}" class="alert-danger">
+            <strong>‼️ Внимание! Следующие продукты просрочены и подлежат списанию:</strong>
+            <ul>
+                <li th:each="product : ${expiredProducts}">
+                    <span th:text="${product.productInfo.name}"></span>
+                    (Остаток: <span th:text="${product.quantity}"></span> шт.) -
+                    истек <strong th:text="${product.expiryDate}"></strong>
+                </li>
+            </ul>
+        </div>
+
+        <div th:if="${!#lists.isEmpty(expiringProducts)}" class="alert-warning">
+            <strong>⚠️ Срок годности этих продуктов истекает в ближайшие 3 дня:</strong>
+            <ul>
+                <li th:each="product : ${expiringProducts}">
+                    <span th:text="${product.productInfo.name}"></span>
+                    (Остаток: <span th:text="${product.quantity}"></span> шт.) -
+                    годен до <strong th:text="${product.expiryDate}"></strong>
+                </li>
+            </ul>
+        </div>
+
+        <div th:if="${#lists.isEmpty(expiredProducts) and #lists.isEmpty(expiringProducts)}" class="empty-msg">
+            ✅ Отличные новости! На складе нет просроченных продуктов или продуктов с истекающим сроком годности.
+        </div>
+
     </div>
-
-    <div th:if="${!#lists.isEmpty(expiringProducts)}" class="alert-warning">
-        <strong>⚠️ Срок годности этих продуктов истекает в ближайшие 3 дня:</strong>
-        <ul>
-            <li th:each="product : ${expiringProducts}">
-                <span th:text="${product.productInfo.name}"></span>
-                (Остаток: <span th:text="${product.quantity}"></span> шт.) -
-                годен до <strong th:text="${product.expiryDate}"></strong>
-            </li>
-        </ul>
-    </div>
-
-    <div th:if="${#lists.isEmpty(expiredProducts) and #lists.isEmpty(expiringProducts)}" class="empty-msg">
-        ✅ Отличные новости! На складе нет просроченных продуктов или продуктов с истекающим сроком годности.
-    </div>
-
 </div>
 
 </body>

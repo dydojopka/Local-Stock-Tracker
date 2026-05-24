@@ -4,60 +4,200 @@
     <meta charset="UTF-8">
     <title>Текущие запасы продуктов</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+
+    <style>
+        th.sortable {
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.2s;
+        }
+        th.sortable:hover {
+            background-color: #0056b3; /* Чуть более темный синий при наведении */
+        }
+    </style>
 </head>
 <body>
 
-<div class="container">
+<div class="page-wrapper">
     <div th:replace="~{fragments/header :: nav-menu(activePage='products')}"></div>
 
-    <h2>Текущие запасы продуктов (Склад)</h2>
+    <div class="container">
 
-    <div th:if="${param.success}" class="success-msg">
-        Новая партия продукта успешно поставлена на учет!
+        <h2>Текущие запасы продуктов (Склад)</h2>
+
+        <div th:if="${param.success}" class="success-msg">
+            Новая партия продукта успешно поставлена на учет!
+        </div>
+        <div th:if="${param.writeOffSuccess}" class="success-msg">
+            Успешно списано!
+        </div>
+
+        <div class="toolbar">
+            <a th:href="@{/products/add}" class="btn" id="link-to-product-add">+ Добавить продукт</a>
+
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" class="form-control search-input"
+                       placeholder="Поиск по названию или штрих-коду (несколько через ;)">
+
+                <button id="clearSearchBtn" title="Очистить поиск">&times;</button>
+            </div>
+        </div>
+
+        <table id="productsTable">
+            <thead>
+            <tr>
+                <th class="sortable" onclick="sortTable(0, 'number')">ID</th>
+                <th class="sortable" onclick="sortTable(1, 'string')">Название товара</th>
+                <th class="sortable" onclick="sortTable(2, 'string')">Штрих-код</th>
+                <th class="sortable" onclick="sortTable(3, 'number')">Количество</th>
+                <th class="sortable" onclick="sortTable(4, 'date')">Дата добавления</th>
+                <th class="sortable" onclick="sortTable(5, 'date')">Срок годности</th>
+                <th class="sortable" onclick="sortTable(6, 'string')">Статус</th>
+                <th>Действия</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="product : ${products}" th:classappend="${product.isExpired()} ? 'expired' : ''">
+                <td th:text="${product.id}">1</td>
+                <td th:text="${product.productInfo.name}">Молоко</td>
+                <td th:text="${product.productInfo.barcode}">123456</td>
+                <td th:text="${product.quantity}">2.0</td>
+                <td th:text="${product.addedDate}">2026-05-23</td>
+                <td th:text="${product.expiryDate}">2026-05-30</td>
+                <td>
+                    <span th:if="${product.isExpired()}">ПРОСРОЧЕНО</span>
+                    <span th:unless="${product.isExpired()}">Норма</span>
+                </td>
+                <td>
+                    <a th:href="@{/products/write-off/{id}(id=${product.id})}"
+                       class="btn-remove">Списать
+                    </a>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(products)}">
+                <td colspan="8" style="text-align: center; color: #777;">На складе пока нет продуктов.</td>
+            </tr>
+            </tbody>
+        </table>
     </div>
-    <div th:if="${param.writeOffSuccess}" class="success-msg">
-        Успешно списано!
-    </div>
-
-    <a th:href="@{/products/add}" class="btn" id="link-to-product-add">+ Добавить продукт</a>
-
-    <table>
-        <thead>
-        <tr>
-            <th>ID партии</th>
-            <th>Наименование товара</th>
-            <th>Штрих-код</th>
-            <th>Количество</th>
-            <th>Дата добавления</th>
-            <th>Срок годности</th>
-            <th>Статус</th>
-            <th>Действия</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="product : ${products}" th:classappend="${product.isExpired()} ? 'expired' : ''">
-            <td th:text="${product.id}">1</td>
-            <td th:text="${product.productInfo.name}">Молоко</td>
-            <td th:text="${product.productInfo.barcode}">123456</td>
-            <td th:text="${product.quantity}">2.0</td>
-            <td th:text="${product.addedDate}">2026-05-23</td>
-            <td th:text="${product.expiryDate}">2026-05-30</td>
-            <td>
-                <span th:if="${product.isExpired()}">ПРОСРОЧЕНО</span>
-                <span th:unless="${product.isExpired()}">Норма</span>
-            </td>
-            <td>
-                <a th:href="@{/products/write-off/{id}(id=${product.id})}"
-                   class="btn-remove">Списать
-                </a>
-            </td>
-        </tr>
-        <tr th:if="${#lists.isEmpty(products)}">
-            <td colspan="8" style="text-align: center; color: #777;">На складе пока нет продуктов.</td>
-        </tr>
-        </tbody>
-    </table>
 </div>
+
+<script>
+    let currentColumn = -1;
+    let isAscending = true;
+
+    function sortTable(columnIndex, type) {
+        const table = document.getElementById("productsTable");
+        const tbody = table.querySelector("tbody");
+        const rows = Array.from(tbody.querySelectorAll("tr"));
+
+        // Защита: если таблица пустая (показывается строка "На складе пока нет продуктов"), ничего не делаем
+        if (rows.length === 1 && rows[0].cells[0].colSpan > 1) {
+            return;
+        }
+
+        // Логика направления: если та же колонка - меняем, если новая - по возрастанию
+        if (currentColumn === columnIndex) {
+            isAscending = !isAscending;
+        } else {
+            isAscending = true;
+            currentColumn = columnIndex;
+        }
+
+        // Сортируем массив строк
+        rows.sort((rowA, rowB) => {
+            const cellA = rowA.cells[columnIndex].innerText.trim();
+            const cellB = rowB.cells[columnIndex].innerText.trim();
+
+            // Если поле пустое (например, нет штрихкода), всегда отправляем его вниз
+            if (cellA === "" || cellB === "") {
+                if (cellA === cellB) return 0;
+                return cellA === "" ? 1 : -1;
+            }
+
+            let comparison = 0;
+
+            if (type === 'number') {
+                comparison = parseFloat(cellA) - parseFloat(cellB);
+            } else if (type === 'date') {
+                comparison = new Date(cellA) - new Date(cellB);
+            } else {
+                comparison = cellA.localeCompare(cellB, 'ru');
+            }
+
+            return isAscending ? comparison : -comparison;
+        });
+
+        // Обновляем стрелочки в заголовках
+        const headers = table.querySelectorAll("th.sortable");
+        headers.forEach((th, index) => {
+            // Удаляем старые стрелочки, если они есть
+            th.innerHTML = th.innerHTML.replace(' ▲', '').replace(' ▼', '');
+            if (index === columnIndex) {
+                // Добавляем новую стрелочку
+                th.innerHTML += isAscending ? ' ▲' : ' ▼';
+            }
+        });
+
+        // Вставляем отсортированные строки обратно в DOM
+        tbody.append(...rows);
+    }
+
+    // --- Логика поиска по таблице ---
+    document.addEventListener("DOMContentLoaded", function() {
+    const searchInput = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearSearchBtn');
+    const table = document.getElementById("productsTable");
+    const tbody = table.querySelector("tbody");
+
+    // Если таблицы нет или она пустая (есть только строка "На складе пока нет продуктов"), выходим
+    if (!tbody || (tbody.rows.length === 1 && tbody.rows[0].cells[0].colSpan > 1)) return;
+
+    function applySearch() {
+        const query = searchInput.value.toLowerCase();
+        const rows = Array.from(tbody.querySelectorAll("tr"));
+
+        // Показываем или скрываем крестик в зависимости от наличия текста
+        clearBtn.style.display = query.length > 0 ? 'block' : 'none';
+
+        // Разбиваем запрос по ';' и удаляем лишние пробелы. Отбрасываем пустые куски.
+        const searchTerms = query.split(';')
+                                 .map(t => t.trim())
+                                 .filter(t => t.length > 0);
+
+        rows.forEach(row => {
+            // Берем текст из 2-й колонки (Название) и 3-й (Штрих-код). Индексы 1 и 2.
+            const nameCell = row.cells[1].innerText.toLowerCase();
+            const barcodeCell = row.cells[2].innerText.toLowerCase();
+
+            // Если поле поиска пустое - возвращаем все строки
+            if (searchTerms.length === 0) {
+                row.style.display = '';
+                return;
+            }
+
+            // Проверяем, совпадает ли хотя бы один из введенных терминов с именем или штрихкодом
+            const isMatch = searchTerms.some(term =>
+                nameCell.includes(term) || barcodeCell.includes(term)
+            );
+
+            // Показываем строку, если есть совпадение, иначе полностью скрываем
+            row.style.display = isMatch ? '' : 'none';
+        });
+    }
+
+    // Запускаем поиск при каждом вводе символа
+    searchInput.addEventListener('input', applySearch);
+
+    // Логика для кнопки очистки (крестика)
+    clearBtn.addEventListener('click', function() {
+        searchInput.value = '';
+        applySearch(); // Принудительно сбрасываем фильтр
+        searchInput.focus(); // Удобство: возвращаем курсор обратно в строку
+    });
+});
+</script>
 
 </body>
 </html>
