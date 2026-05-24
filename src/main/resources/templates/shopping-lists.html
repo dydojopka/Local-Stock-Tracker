@@ -3,34 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Списки покупок</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f8f9fa; }
-        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-
-        .nav-menu { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #eee; }
-        .nav-menu a { margin-right: 15px; text-decoration: none; color: #007bff; font-weight: bold; font-size: 18px; }
-
-        /* Стили кнопок */
-        .btn { display: inline-block; padding: 10px 15px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; border: none; cursor: pointer; }
-        .btn:hover { background-color: #0056b3; }
-
-        .action-btn { padding: 6px 12px; margin-right: 5px; border: none; border-radius: 4px; cursor: pointer; color: white; font-size: 14px; }
-        .btn-copy { background-color: #28a745; }
-        .btn-copy:hover { background-color: #218838; }
-        .btn-download { background-color: #17a2b8; }
-        .btn-download:hover { background-color: #138496; }
-        .btn-delete { background-color: #dc3545; }
-        .btn-delete:hover { background-color: #c82333; }
-
-        /* Сообщения */
-        .success-msg { color: #155724; background-color: #d4edda; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
-        .info-msg { color: #0c5460; background-color: #d1ecf1; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
-        .delete-msg { color: #856404; background-color: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
-
-        .list-card { border: 1px solid #ccc; padding: 15px; margin-top: 15px; border-radius: 5px; background-color: #fdfdfd; }
-        ul { margin-top: 10px; list-style-type: square; }
-        li { margin-bottom: 5px; }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
 
@@ -44,7 +17,7 @@
     <div th:if="${param.deleted != null}" class="delete-msg">Список успешно удален.</div>
 
     <form th:action="@{/shopping/generate}" method="post" style="margin-bottom: 20px;">
-        <button type="submit" class="btn">Сгенерировать новый список</button>
+        <button type="submit" class="btn" id="create-list">Сгенерировать новый список</button>
     </form>
 
     <div th:if="${#lists.isEmpty(shoppingLists)}">
@@ -57,16 +30,24 @@
 
         <ul th:id="'items-' + ${list.id}">
             <li th:each="item : ${list.items}">
-                <strong th:text="${item.productInfo.name}">Наименование</strong> — купить: <span th:text="${item.targetQuantity}">0</span> шт.
+                <strong th:text="${item.productInfo.name}">Наименование</strong> - купить: <span
+                    th:text="${item.targetQuantity}">0</span> шт.
             </li>
         </ul>
 
         <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px;">
-            <button type="button" class="action-btn btn-copy" th:onclick="'copyList(' + ${list.id} + ')'">📋 Скопировать</button>
-            <button type="button" class="action-btn btn-download" th:onclick="'downloadList(' + ${list.id} + ')'">⬇️ Скачать</button>
+            <button type="button" class="action-btn btn-copy" th:onclick="'copyList(' + ${list.id} + ')'">
+                📋 Скопировать
+            </button>
+            <button type="button" class="action-btn btn-download" th:onclick="'downloadList(' + ${list.id} + ')'">
+                ⬇️ Скачать
+            </button>
 
-            <form th:action="@{/shopping/delete/{id}(id=${list.id})}" method="post" style="display:inline-block; margin-left: 15px;">
-                <button type="submit" class="action-btn btn-delete" onclick="return confirm('Вы уверены, что хотите удалить этот список?');">🗑️ Удалить</button>
+            <form th:action="@{/shopping/delete/{id}(id=${list.id})}" method="post"
+                  style="display:inline-block; margin-left: 15px;">
+                <button type="submit" class="action-btn btn-delete"
+                        onclick="return confirm('Вы уверены, что хотите удалить этот список?');">🗑️ Удалить
+                </button>
             </form>
         </div>
     </div>

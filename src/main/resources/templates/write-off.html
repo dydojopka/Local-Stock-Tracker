@@ -3,52 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <title>Списание продукта</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; }
-        input, select { padding: 8px; width: 300px; }
-        button { padding: 10px 15px; background-color: #dc3545; color: white; border: none; cursor: pointer; }
-        button:hover { background-color: #c82333; }
-        .error-msg { color: #721c24; background-color: #f8d7da; padding: 10px; margin-bottom: 20px; border-radius: 5px; width: 300px; }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
 
-<h2>Списание продукта</h2>
-<p><strong>Товар:</strong> <span th:text="${product.productInfo.name}"></span></p>
-<p><strong>Текущий остаток:</strong> <span th:text="${product.quantity}"></span></p>
+<div class="container">
+    <div th:replace="~{fragments/header :: nav-menu(activePage='products')}"></div>
 
-<div th:if="${param.error}" class="error-msg">
-    Ошибка: Введенное количество превышает остаток!
-</div>
+    <h2>Списание продукта</h2>
+    <p><strong>Товар:</strong> <span th:text="${product.productInfo.name}"></span></p>
+    <p><strong>Текущий остаток:</strong> <span th:text="${product.quantity}"></span></p>
 
-<form th:action="@{/products/write-off}" method="post">
-    <input type="hidden" name="productId" th:value="${product.id}">
+    <div th:if="${param.error}" class="error-msg">
+        Ошибка: Введенное количество превышает остаток!
+    </div>
 
-    <div class="form-group">
-        <label for="amount">Количество к списанию:</label>
-        <div style="display: flex; gap: 10px; align-items: center;">
-            <input type="number" step="0.01" id="amount" name="amount" required min="0.01">
+    <form th:action="@{/products/write-off}" method="post">
+        <input type="hidden" name="productId" th:value="${product.id}">
 
-            <button type="button" style="background-color: #6c757d; padding: 8px 12px; margin: 0;"
-                    th:onclick="|document.getElementById('amount').value = ${product.quantity}|">
-                Списать всё
-            </button>
+        <div class="form-group">
+            <label for="amount">Количество к списанию:</label>
+            <div class="input-group">
+                <input type="number" step="0.01" id="amount" name="amount" class="form-control" required min="0.01">
+
+                <button type="button" class="btn-secondary" th:onclick="|document.getElementById('amount').value = ${product.quantity}|">
+                    Списать всё
+                </button>
+            </div>
         </div>
-    </div>
 
-    <div class="form-group">
-        <label for="reason">Причина списания:</label>
-        <select id="reason" name="reason" required>
-            <option value="Использовано">Использовано</option>
-            <option value="Испорчено">Испорчено</option>
-        </select>
-    </div>
+        <div class="form-group">
+            <label for="reason">Причина списания:</label>
+            <select id="reason" name="reason" class="form-control" required>
+                <option value="Использовано">Использовано</option>
+                <option value="Испорчено">Испорчено</option>
+            </select>
+        </div>
 
-    <button type="submit" style="margin-top: 10px;">Списать</button>
-    <a th:href="@{/products}" style="margin-left: 15px; text-decoration: none; color: #007bff;">Отмена</a>
-</form>
-
+        <button type="submit" class="btn-submit">Списать</button>
+        <a th:href="@{/products}" class="btn-cancel">Отмена</a>
+    </form>
+</div>
 </body>
 </html>

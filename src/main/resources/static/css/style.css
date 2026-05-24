@@ -1,0 +1,254 @@
+/* Базовые настройки страницы */
+body {
+    font-family: Arial, sans-serif;
+    margin: 40px;
+    background-color: #f8f9fa;
+}
+
+/* Главный контейнер */
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    overflow-x: auto;
+}
+
+h2 { color: #333; }
+
+/* Стили "Header" */
+.nav-menu {
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #eee;
+}
+.nav-menu a {
+    margin-right: 15px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+/* Общие стили для таблиц */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    table-layout: fixed;
+}
+th, td {
+    border-bottom: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+    word-wrap: break-word;
+}
+tr {
+    border: 0px 1px 0px 1px solid #ddd;
+}
+th {
+    background-color: #007bff;
+    color: white;
+}
+.expired {
+    background-color: #f8d7da;
+    color: #721c24;
+    font-weight: bold;
+}
+
+/* Стили для уведомлений */
+.alert-danger {
+    color: #721c24;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+.alert-warning {
+    color: #856404;
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+.empty-msg {
+    color: #155724;
+    background-color: #d4edda;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+.success-msg {
+    color: #155724;
+    background-color: #d4edda;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+.info-msg {
+    color: #0c5460;
+    background-color: #d1ecf1;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+.delete-msg {
+    color: #856404;
+    background-color: #fff3cd;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+.error-msg {
+    color: #721c24;
+    background-color: #f8d7da;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+/*catalog*/
+.btn-save {
+    padding: 5px 10px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.btn-save:hover { background-color: #218838; }
+input[type="number"] { width: 80px; padding: 5px; }
+
+/*stock-list*/
+.btn#link-to-product-add {
+    display: inline-block;
+    padding: 10px 15px;
+    background-color: #28a745;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    font-size: 15px;
+}
+.btn#link-to-product-add:hover { background-color: #128C2D; }
+.btn-remove {
+    background-color: #ffc107;
+    color: black;
+    padding: 5px 10px;
+    border-radius: 4px;
+    text-decoration: none;
+}
+.btn-remove:hover {
+    background-color: #D9A300;
+}
+
+/*shopping-lists*/
+.btn#create-list {
+    display: inline-block;
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+}
+.btn#create-list:hover { background-color: #0059B6; }
+.action-btn {
+    padding: 6px 12px;
+    margin-right: 5px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    color: white;
+}
+.btn-copy { background-color: #28a745; }
+.btn-copy:hover { background-color: #218838; }
+.btn-download { background-color: #17a2b8; }
+.btn-download:hover { background-color: #138496; }
+.btn-delete { background-color: #dc3545; }
+.btn-delete:hover { background-color: #c82333; }
+
+/*Список покупок*/
+.list-card {
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin-top: 15px;
+    border-radius: 5px;
+    background-color: #fdfdfd;
+}
+ul { margin-top: 10px; list-style-type: square; }
+li { margin-bottom: 5px; }
+
+/*add-product и write-off*/
+.form-group {
+    margin-bottom: 20px;
+}
+.form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #333;
+}
+.form-control { /* Общий класс для всех полей ввода и выпадающих списков */
+    width: 100%;
+    max-width: 400px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 15px;
+    font-family: inherit;
+}
+.form-control:focus { /* Красивая подсветка поля при нажатии на него */
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.25);
+}
+.input-group { /* Группа для кнопки "Списать всё" */
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    max-width: 400px;
+}
+/* Кнопки управления в формах */
+.btn-submit {
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    margin-top: 10px;
+}
+.btn-submit:hover {
+    background-color: #218838;
+}
+.btn-cancel {
+    margin-left: 15px;
+    text-decoration: none;
+    color: #007bff;
+    font-size: 16px;
+}
+.btn-cancel:hover {
+    text-decoration: underline;
+    color: #0056b3;
+}
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.btn-secondary:hover {
+    background-color: #5a6268;
+}

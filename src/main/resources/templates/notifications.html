@@ -3,18 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Уведомления о сроках годности</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f8f9fa; }
-        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .nav-menu { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #eee; }
-        .nav-menu a { margin-right: 15px; text-decoration: none; color: #007bff; font-weight: bold; font-size: 18px; }
-
-        .alert-danger { color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-        .alert-warning { color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-        .empty-msg { color: #155724; background-color: #d4edda; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-        ul { margin-top: 10px; margin-bottom: 0; }
-        li { margin-bottom: 5px; }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
 
@@ -28,7 +17,7 @@
         <ul>
             <li th:each="product : ${expiredProducts}">
                 <span th:text="${product.productInfo.name}"></span>
-                (Остаток: <span th:text="${product.quantity}"></span> шт.) —
+                (Остаток: <span th:text="${product.quantity}"></span> шт.) -
                 истек <strong th:text="${product.expiryDate}"></strong>
             </li>
         </ul>
@@ -39,7 +28,7 @@
         <ul>
             <li th:each="product : ${expiringProducts}">
                 <span th:text="${product.productInfo.name}"></span>
-                (Остаток: <span th:text="${product.quantity}"></span> шт.) —
+                (Остаток: <span th:text="${product.quantity}"></span> шт.) -
                 годен до <strong th:text="${product.expiryDate}"></strong>
             </li>
         </ul>

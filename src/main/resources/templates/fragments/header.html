@@ -1,12 +1,5 @@
 <!DOCTYPE html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <style>
-        .nav-menu { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #eee; }
-        .nav-menu a { margin-right: 15px; text-decoration: none; color: #007bff; font-weight: bold; font-size: 18px; }
-    </style>
-</head>
-
 <body>
 <div th:fragment="nav-menu(activePage)" class="nav-menu">
     <a th:href="@{/products}"
