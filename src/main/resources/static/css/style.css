@@ -266,6 +266,7 @@ th.sortable:hover {
 .btn-delete { background-color: #dc3545; }
 .btn-delete:hover { background-color: #c82333; }
 
+
 /*Список покупок*/
 .list-card {
     border: 1px solid #ccc;
@@ -276,6 +277,18 @@ th.sortable:hover {
 }
 ul { margin-top: 10px; list-style-type: square; }
 li { margin-bottom: 5px; }
+.purchased-text { /* чекбоксы */
+    text-decoration: line-through;
+    color: #adb5bd;
+    transition: all 0.3s ease; /* плавная анимация зачеркивания */
+}
+.item-checkbox {
+    width: 18px;
+    height: 18px;
+    margin-right: 12px;
+    cursor: pointer;
+    accent-color: #28a745;
+}
 
 /*add-product и write-off*/
 .form-group {

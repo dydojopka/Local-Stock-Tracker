@@ -27,12 +27,24 @@
 
         <div th:each="list : ${shoppingLists}" class="list-card" th:id="'list-' + ${list.id}">
             <h3>Список от <span th:text="${list.createdDate}"></span></h3>
-            <p style="color: #666; font-size: 0.9em; margin-top: 0;">Статус: <span th:text="${list.status}"></span></p>
+            <p style="color: #666; font-size: 0.9em; margin-top: 0;">Статус:
+                <span th:id="'status-' + ${list.id}"
+                      th:text="${list.status}"
+                      th:style="${list.status == 'Выполнен'} ? 'color: #28a745; font-weight: bold;' : ''">
+                </span>
+            </p>
 
-            <ul th:id="'items-' + ${list.id}">
-                <li th:each="item : ${list.items}">
-                    <strong th:text="${item.productInfo.name}">Наименование</strong> - купить: <span
-                        th:text="${item.targetQuantity}">0</span> шт.
+            <ul th:id="'items-' + ${list.id}" style="list-style-type: none; padding-left: 0;">
+                <li th:each="item : ${list.items}" style="display: flex; align-items: center; margin-bottom: 8px;">
+                    <input type="checkbox" class="item-checkbox"
+                           th:checked="${item.isPurchased}"
+                           th:onclick="'toggleItem(' + ${item.id} + ', this, ' + ${list.id} + ')'"/>
+
+                    <span th:id="'item-text-' + ${item.id}"
+                          th:classappend="${item.isPurchased} ? 'purchased-text' : ''">
+                        <strong th:text="${item.productInfo.name}">Наименование</strong> - купить: <span
+                            th:text="${item.targetQuantity}">0</span> шт.
+                    </span>
                 </li>
             </ul>
 
@@ -102,6 +114,49 @@
 
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+    }
+
+    // Функция отправки состояния чекбокса на сервер
+    function toggleItem(itemId, checkboxElem, listId) {
+        const isPurchased = checkboxElem.checked;
+
+        // Отправляем тихий запрос на сервер
+        fetch(`/shopping/toggle-item/${itemId}?purchased=${isPurchased}`, {
+            method: 'POST'
+        }).then(response => {
+            if(response.ok) {
+                // Визуально зачеркиваем текст
+                const textSpan = document.getElementById('item-text-' + itemId);
+                if (isPurchased) {
+                    textSpan.classList.add('purchased-text');
+                } else {
+                    textSpan.classList.remove('purchased-text');
+                }
+                // Проверяем, не выполнен ли теперь весь список
+                checkAllPurchased(listId);
+            } else {
+                alert("Ошибка соединения с сервером");
+                checkboxElem.checked = !isPurchased; // Возвращаем чекбокс обратно в случае ошибки
+            }
+        });
+    }
+
+    // Проверка всех галочек и изменение статуса "Выполнен" на лету
+    function checkAllPurchased(listId) {
+        const listCard = document.getElementById('list-' + listId);
+        const checkboxes = listCard.querySelectorAll('.item-checkbox');
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+
+        const statusSpan = document.getElementById('status-' + listId);
+        if (allChecked) {
+            statusSpan.innerText = "Выполнен";
+            statusSpan.style.color = "#28a745";
+            statusSpan.style.fontWeight = "bold";
+        } else {
+            statusSpan.innerText = "Активен";
+            statusSpan.style.color = "#666";
+            statusSpan.style.fontWeight = "normal";
+        }
     }
 </script>
 

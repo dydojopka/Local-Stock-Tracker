@@ -1,6 +1,7 @@
 package org.ashroev.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.ashroev.repository.ShoppingListRepository;
 import org.ashroev.service.InventoryManager;
 import org.springframework.stereotype.Controller;
@@ -9,6 +10,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 @RequestMapping("/shopping")
@@ -42,5 +45,13 @@ public class ShoppingListController {
     public String deleteList(@PathVariable Integer id) {
         shoppingListRepository.deleteById(id);
         return "redirect:/shopping?deleted";
+    }
+
+    // Обработка нажатия на чекбокс (AJAX)
+    @PostMapping("/toggle-item/{itemId}")
+    @ResponseBody
+    public ResponseEntity<?> toggleItem(@PathVariable Integer itemId, @RequestParam boolean purchased) {
+        inventoryManager.toggleShoppingListItem(itemId, purchased);
+        return ResponseEntity.ok().build();
     }
 }

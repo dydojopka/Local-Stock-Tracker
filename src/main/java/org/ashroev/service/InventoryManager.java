@@ -1,5 +1,6 @@
 package org.ashroev.service;
 
+import org.ashroev.repository.ShoppingListItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.ashroev.model.Product;
 import org.ashroev.model.ProductHistory;
@@ -29,6 +30,7 @@ public class InventoryManager {
     private final ProductRepository productRepository;
     private final ProductInfoRepository productInfoRepository;
     private final ShoppingListRepository shoppingListRepository;
+    private final ShoppingListItemRepository shoppingListItemRepository;
 
     private ProductHistoryRepository productHistoryRepository;
 
@@ -205,5 +207,28 @@ public class InventoryManager {
         return productRepository.findByExpiryDateBefore(LocalDate.now()).stream()
                 .filter(p -> p.getQuantity() > 0)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void toggleShoppingListItem(Integer itemId, boolean isPurchased) {
+        // Находим позицию в списке
+        ShoppingListItem item = shoppingListItemRepository.findById(itemId)
+                .orElseThrow(() -> new IllegalArgumentException("Элемент не найден"));
+
+        // Обновляем статус
+        item.setIsPurchased(isPurchased);
+        shoppingListItemRepository.save(item);
+
+        // Проверяем, куплены ли все товары в этом списке
+        ShoppingList list = item.getShoppingList();
+        boolean allPurchased = list.getItems().stream().allMatch(ShoppingListItem::getIsPurchased);
+
+        // Автоматически меняем статус всего списка
+        if (allPurchased) {
+            list.setStatus("Выполнен");
+        } else {
+            list.setStatus("Активен");
+        }
+        shoppingListRepository.save(list);
     }
 }
