@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.ashroev.model.Product;
 import org.ashroev.repository.ProductInfoRepository;
 import org.ashroev.service.InventoryManager;
+import org.springframework.format.annotation.DateTimeFormat; // Важный импорт для работы с датами
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,7 +24,6 @@ public class ProductController {
     private final InventoryManager inventoryManager;
     private final ProductInfoRepository productInfoRepository;
 
-
     // Отображение формы списания для конкретного продукта
     @GetMapping("/write-off/{id}")
     public String showWriteOffForm(@PathVariable Integer id, Model model) {
@@ -33,10 +33,10 @@ public class ProductController {
                 .orElseThrow(() -> new IllegalArgumentException("Продукт не найден"));
 
         model.addAttribute("product", product);
-        return "write-off"; // Имя нового HTML-шаблона
+        return "write-off"; // Имя HTML-шаблона
     }
 
-    // Обработка отправки формы списания
+    // Обработка отправки формы списания (ТЕПЕРЬ ПОЛНОСТЬЮ СОВПАДАЕТ С ИСТОРИЕЙ)
     @PostMapping("/write-off")
     public String writeOffProduct(
             @RequestParam Integer productId,
@@ -44,6 +44,7 @@ public class ProductController {
             @RequestParam String reason) {
 
         try {
+            // Передаем причину (USED, EXPIRED, DELETE) в сервис
             inventoryManager.writeOffProduct(productId, amount, reason);
             return "redirect:/products?writeOffSuccess";
         } catch (IllegalArgumentException e) {
@@ -57,7 +58,7 @@ public class ProductController {
     public String showStockList(Model model) {
         List<Product> stock = inventoryManager.getAvailableStock();
         model.addAttribute("products", stock);
-        return "stock-list"; // Имя нового HTML-файла
+        return "stock-list"; // Имя HTML-файла
     }
 
     // Отображение формы добавления товара
@@ -72,7 +73,7 @@ public class ProductController {
     public String addProduct(
             @RequestParam Integer productInfoId,
             @RequestParam Double quantity,
-            @RequestParam LocalDate expiryDate) {
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate expiryDate) { // Исправлено здесь
 
         inventoryManager.addProduct(productInfoId, quantity, expiryDate);
 

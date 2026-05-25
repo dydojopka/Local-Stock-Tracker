@@ -4,17 +4,6 @@
     <meta charset="UTF-8">
     <title>Текущие запасы продуктов</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
-
-    <style>
-        th.sortable {
-            cursor: pointer;
-            user-select: none;
-            transition: background-color 0.2s;
-        }
-        th.sortable:hover {
-            background-color: #0056b3; /* Чуть более темный синий при наведении */
-        }
-    </style>
 </head>
 <body>
 
@@ -54,7 +43,7 @@
                 <th class="sortable" onclick="sortTable(4, 'date')">Дата добавления</th>
                 <th class="sortable" onclick="sortTable(5, 'date')">Срок годности</th>
                 <th class="sortable" onclick="sortTable(6, 'string')">Статус</th>
-                <th>Действия</th>
+                <th>Действие</th>
             </tr>
             </thead>
             <tbody>
@@ -110,7 +99,7 @@
             const cellA = rowA.cells[columnIndex].innerText.trim();
             const cellB = rowB.cells[columnIndex].innerText.trim();
 
-            // Если поле пустое (например, нет штрихкода), всегда отправляем его вниз
+            // Если поле пустое, всегда отправляем его вниз
             if (cellA === "" || cellB === "") {
                 if (cellA === cellB) return 0;
                 return cellA === "" ? 1 : -1;
@@ -144,7 +133,7 @@
         tbody.append(...rows);
     }
 
-    // --- Логика поиска по таблице ---
+    // Логика поиска по таблице
     document.addEventListener("DOMContentLoaded", function() {
     const searchInput = document.getElementById('searchInput');
     const clearBtn = document.getElementById('clearSearchBtn');
@@ -161,13 +150,13 @@
         // Показываем или скрываем крестик в зависимости от наличия текста
         clearBtn.style.display = query.length > 0 ? 'block' : 'none';
 
-        // Разбиваем запрос по ';' и удаляем лишние пробелы. Отбрасываем пустые куски.
+        // Разбиваем запрос по ';' и удаляем лишние пробелы. Отбрасываем пустые куски
         const searchTerms = query.split(';')
                                  .map(t => t.trim())
                                  .filter(t => t.length > 0);
 
         rows.forEach(row => {
-            // Берем текст из 2-й колонки (Название) и 3-й (Штрих-код). Индексы 1 и 2.
+            // Берем текст из 2-й колонки (Название) и 3-й (Штрих-код). Индексы 1 и 2
             const nameCell = row.cells[1].innerText.toLowerCase();
             const barcodeCell = row.cells[2].innerText.toLowerCase();
 
@@ -190,11 +179,11 @@
     // Запускаем поиск при каждом вводе символа
     searchInput.addEventListener('input', applySearch);
 
-    // Логика для кнопки очистки (крестика)
+    // Логика для кнопки очистки
     clearBtn.addEventListener('click', function() {
         searchInput.value = '';
         applySearch(); // Принудительно сбрасываем фильтр
-        searchInput.focus(); // Удобство: возвращаем курсор обратно в строку
+        searchInput.focus(); // Возвращаем курсор обратно в строку
     });
 });
 </script>

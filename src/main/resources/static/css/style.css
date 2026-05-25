@@ -1,46 +1,43 @@
 /* Базовые настройки страницы */
 body {
     font-family: Arial, sans-serif;
-    margin: 0; /* Убрали жесткий margin, теперь за отступы отвечает обертка */
+    margin: 0;
     background-color: #f8f9fa;
 }
 
-/* Новая общая обертка, которая центрирует всю страницу и выстраивает меню и контент в ряд */
+/* Общая обертка - центрирует всю страницу и выстраивает меню и контент в ряд */
 .page-wrapper {
     display: flex;
-    max-width: 80%; /* Общая ширина всей рабочей зоны (меню + контейнер) */
-    margin: 40px auto; /* Центрируем страницу по горизонтали и делаем отступ 40px сверху/снизу */
-    gap: 20px; /* Красивый зазор между боковым меню и основным контейнером */
+    max-width: 80%;
+    margin: 40px auto;
+    gap: 20px; /* Зазор между боковым меню и основным контейнером */
     align-items: flex-start; /* Чтобы меню не растягивалось принудительно по высоте вниз */
 }
 
-/* Главный контейнер (теперь он автоматически уменьшается и занимает всю правую часть) */
+/* Главный контейнер */
 .container {
     flex: 1; /* Автоматически занимает всё оставшееся место справа */
     background: white;
-    padding: 25px; /* Сделали равномерные аккуратные отступы со всех сторон */
+    padding: 25px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     overflow-x: auto;
     min-height: 500px;
-    /* УБРАЛИ: max-width: 80%, margin: 0 auto, padding-left: 265px и position: relative */
 }
 
-h2 { color: #333; margin-top: 0; } /* Убираем верхний маргин у заголовка, чтобы он был вровень с меню */
+h2 { color: #333; margin-top: 0; }
 
-/* Стили бокового меню (Sidebar) — теперь это независимый блок слева */
+/* Стили бокового меню (Sidebar) */
 .nav-menu {
-    width: 220px; /* Фиксированная ширина меню */
+    width: 220px;
     display: flex;
-    flex-direction: column; /* Выстраиваем элементы вертикально */
+    flex-direction: column;
     gap: 7px; /* Расстояние между кнопками */
-    background-color: white; /* Сделали его белым, как контейнер, выглядит благороднее */
+    background-color: white;
     padding: 20px 15px;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Легкая тень */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
-
-/* Стили ссылок внутри меню */
 .nav-menu a {
     text-decoration: none;
     font-size: 16px;
@@ -182,7 +179,7 @@ th.sortable {
     transition: background-color 0.2s;
 }
 th.sortable:hover {
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: #0056b3;
 }
 #productsTable th:first-child,
 #productsTable td:first-child {

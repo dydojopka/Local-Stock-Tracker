@@ -2,15 +2,21 @@ package org.ashroev.service;
 
 import lombok.RequiredArgsConstructor;
 import org.ashroev.model.Product;
+import org.ashroev.model.ProductHistory;
 import org.ashroev.model.ProductInfo;
 import org.ashroev.model.ShoppingList;
 import org.ashroev.model.ShoppingListItem;
+import org.ashroev.model.WriteOffReason;
 import org.ashroev.repository.ProductInfoRepository;
 import org.ashroev.repository.ProductRepository;
 import org.ashroev.repository.ShoppingListRepository;
+import org.ashroev.repository.ProductHistoryRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,6 +29,49 @@ public class InventoryManager {
     private final ProductRepository productRepository;
     private final ProductInfoRepository productInfoRepository;
     private final ShoppingListRepository shoppingListRepository;
+
+    private ProductHistoryRepository productHistoryRepository;
+
+    @Transactional
+    public void writeOffProduct(Integer productId, double quantityToRemove, String actionType) {
+        // Находим партию продукта на складе
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Продукт на складе не найден с ID: " + productId));
+
+        // Нельзя списать больше, чем есть на складе
+        if (quantityToRemove > product.getQuantity()) {
+            throw new IllegalArgumentException("Нельзя списать больше, чем есть в наличии");
+        }
+
+        // Логика сохранения в историю (только если это НЕ простое удаление ошибки)
+        if (!"DELETE".equalsIgnoreCase(actionType)) {
+            WriteOffReason reason;
+            if ("USED".equalsIgnoreCase(actionType)) {
+                reason = WriteOffReason.USED;
+            } else if ("EXPIRED".equalsIgnoreCase(actionType)) {
+                reason = WriteOffReason.EXPIRED;
+            } else {
+                throw new IllegalArgumentException("Неверная причина списания: " + actionType);
+            }
+
+            // Создаем запись в историю
+            ProductHistory logEntry = new ProductHistory(
+                    product.getProductInfo(),
+                    quantityToRemove,
+                    reason,
+                    LocalDateTime.now()
+            );
+            productHistoryRepository.save(logEntry);
+        }
+
+        // Изменяем остаток на складе или удаляем запись, если списали всё подчистую
+        if (quantityToRemove == product.getQuantity()) {
+            productRepository.delete(product);
+        } else {
+            product.setQuantity(product.getQuantity() - quantityToRemove);
+            productRepository.save(product);
+        }
+    }
 
     /**
      * Инициация процесса постановки новой партии товара на учет.
