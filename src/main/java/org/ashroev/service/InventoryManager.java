@@ -21,6 +21,11 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.Map;
+import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
+import java.time.format.DateTimeFormatter;
 
 @Service
 @RequiredArgsConstructor
@@ -230,5 +235,141 @@ public class InventoryManager {
             list.setStatus("Активен");
         }
         shoppingListRepository.save(list);
+    }
+
+    public Map<String, Object> getDashboardStats() {
+        Map<String, Object> stats = new HashMap<>();
+
+        // 1. Получаем только активные партии (где остаток > 0)
+        List<Product> activeProducts = productRepository.findAll().stream()
+                .filter(p -> p.getQuantity() > 0)
+                .collect(Collectors.toList());
+
+        // --- МЕТРИКИ ВСЕГО НА СКЛАДЕ ---
+        long totalBatches = activeProducts.size();
+        // Считаем сумму всех штук/кг во всех активных партиях
+        double totalQuantity = activeProducts.stream()
+                .mapToDouble(Product::getQuantity)
+                .sum();
+
+        stats.put("totalProducts", totalBatches); // Оставляем для совместимости (кол-во партий)
+        stats.put("totalQuantity", totalQuantity); // Честное кол-во товара на складе
+
+        // --- МЕТРИКИ ПРОСРОЧКИ ---
+        List<Product> expiredProducts = activeProducts.stream()
+                .filter(p -> p.getExpiryDate() != null && p.getExpiryDate().isBefore(java.time.LocalDate.now()))
+                .collect(Collectors.toList());
+
+        long expiredBatchesCount = expiredProducts.size();
+        double expiredQuantitySum = expiredProducts.stream()
+                .mapToDouble(Product::getQuantity)
+                .sum();
+
+        stats.put("expiredCount", expiredBatchesCount); // Сколько партий выкинуть
+        stats.put("expiredQuantity", expiredQuantitySum); // Сколько именно ШТУК/КГ испортилось
+
+        // --- АКТИВНЫЕ СПИСКИ ПОКУПОК ---
+        long activeListsCount = shoppingListRepository.countByStatus("Активен");
+        stats.put("activeListsCount", activeListsCount);
+
+        // --- ТОВАРЫ, КОТОРЫЕ ЗАКАНЧИВАЮТСЯ (Тут логика уже была правильной, по объемам!) ---
+        Map<ProductInfo, Double> currentStock = new HashMap<>();
+        activeProducts.stream()
+                .filter(p -> p.getExpiryDate() == null || p.getExpiryDate().isAfter(java.time.LocalDate.now()))
+                .forEach(p -> currentStock.merge(p.getProductInfo(), p.getQuantity(), Double::sum));
+
+        long lowStockCount = productInfoRepository.findAll().stream()
+                .filter(info -> {
+                    double inStock = currentStock.getOrDefault(info, 0.0);
+                    return inStock < info.getMinQuantity();
+                })
+                .count();
+        stats.put("lowStockCount", lowStockCount);
+
+        // Процент испорченного товара от общего объема
+        int healthScore = 100;
+        if (totalQuantity > 0) {
+            double expiredPercent = (expiredQuantitySum / totalQuantity) * 100;
+            // К примеру, каждые 5% просроченного объема снижают здоровье на 10 пунктов,
+            // а каждая позиция с низким запасом (lowStock) — на 5 пунктов.
+            healthScore = 100 - (int) (expiredPercent * 2) - (int) (lowStockCount * 5);
+            if (healthScore < 0) healthScore = 0;
+        }
+        stats.put("healthScore", healthScore);
+
+        // --- ДАННЫЕ ДЛЯ ГРАФИКА (Группировка по объемам штук/кг, а не по штукам партий!) ---
+        Map<String, Double> categoryDistribution = activeProducts.stream()
+                .filter(p -> p.getProductInfo() != null && p.getProductInfo().getCategory() != null)
+                .collect(Collectors.groupingBy(
+                        p -> p.getProductInfo().getCategory().getName(),
+                        Collectors.summingDouble(Product::getQuantity) // <-- Теперь график покажет реальный объем еды!
+                ));
+
+        stats.put("categoryLabels", categoryDistribution.keySet());
+        stats.put("categoryData", categoryDistribution.values());
+
+        // Топ-5 продуктов с ближайшим сроком годности
+        List<Product> topExpiring = activeProducts.stream()
+                .filter(p -> p.getExpiryDate() != null)
+                // Оставляем только те, что ЕЩЕ НЕ просрочены (сегодня или в будущем)
+                .filter(p -> !p.getExpiryDate().isBefore(java.time.LocalDate.now()))
+                // Сортируем по дате по возрастанию (кто испортится быстрее)
+                .sorted(Comparator.comparing(Product::getExpiryDate))
+                // Берем только первые 5 штук
+                .limit(5)
+                .collect(Collectors.toList());
+
+        // Вытаскиваем их названия
+        List<String> expiryLabels = topExpiring.stream()
+                .map(p -> p.getProductInfo().getName())
+                .collect(Collectors.toList());
+
+        // Высчитываем разницу в днях между сегодня и сроком годности
+        List<Long> expiryData = topExpiring.stream()
+                .map(p -> ChronoUnit.DAYS.between(java.time.LocalDate.now(), p.getExpiryDate()))
+                .collect(Collectors.toList());
+
+        // Передаем в модель
+        stats.put("expiryLabels", expiryLabels);
+        stats.put("expiryData", expiryData);
+
+        // --- Данные для графика списания за последние 7 дней ---
+        LocalDate today = LocalDate.now();
+        List<String> lineChartLabels = new ArrayList<>();
+        List<Long> consumedData = new ArrayList<>();
+        List<Long> expiredData = new ArrayList<>();
+        DateTimeFormatter chartFormatter = DateTimeFormatter.ofPattern("dd.MM");
+
+        for (int i = 6; i >= 0; i--) {
+            LocalDate date = today.minusDays(i);
+            lineChartLabels.add(date.format(chartFormatter));
+
+            // Задаем границы дня (от 00:00:00 до 23:59:59), так как в истории хранится LocalDateTime
+            LocalDateTime startOfDay = date.atStartOfDay();
+            LocalDateTime endOfDay = date.atTime(23, 59, 59);
+
+            // Считаем использованные за этот день
+            long consumedCount = productHistoryRepository.countByReasonAndTimestampBetween(
+                    WriteOffReason.USED, startOfDay, endOfDay);
+
+            // Считаем просроченные за этот день
+            long expiredCount = productHistoryRepository.countByReasonAndTimestampBetween(
+                    WriteOffReason.EXPIRED, startOfDay, endOfDay);
+
+            consumedData.add(consumedCount);
+            expiredData.add(expiredCount);
+        }
+
+        // Передаем списки в модель отображения
+        stats.put("lineChartLabels", lineChartLabels);
+        stats.put("consumedData", consumedData);
+        stats.put("expiredData", expiredData);
+
+        // Передаем списки в модель отображения
+        stats.put("lineChartLabels", lineChartLabels);
+        stats.put("consumedData", consumedData);
+        stats.put("expiredData", expiredData);
+
+        return stats;
     }
 }

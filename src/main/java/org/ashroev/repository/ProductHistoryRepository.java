@@ -1,10 +1,11 @@
 package org.ashroev.repository;
 
 import org.ashroev.model.ProductHistory;
+import org.ashroev.model.WriteOffReason;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import java.time.LocalDateTime;
 
-@Repository
 public interface ProductHistoryRepository extends JpaRepository<ProductHistory, Long> {
-    // Методы для будущих графиков (выборка за неделю/месяц) мы напишем здесь позже
+    // Этот метод посчитает, сколько продуктов было списано по конкретной причине за промежуток времени
+    long countByReasonAndTimestampBetween(WriteOffReason reason, LocalDateTime start, LocalDateTime end);
 }

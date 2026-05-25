@@ -23,6 +23,7 @@ body {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     overflow-x: auto;
     min-height: 500px;
+    max-width: 1200px;
 }
 
 h2 { color: #333; margin-top: 0; }
@@ -357,4 +358,46 @@ li { margin-bottom: 5px; }
 }
 .btn-secondary:hover {
     background-color: #5a6268;
+}
+
+/* Панель управления (Dashboard) */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+}
+.kpi-card {
+    background: #fff;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    border-left: 5px solid #007bff;
+    transition: transform 0.2s;
+}
+.kpi-card:hover { transform: translateY(-3px); }
+.kpi-card.expired { border-left-color: #dc3545; }
+.kpi-card.low-stock { border-left-color: #ffc107; }
+.kpi-card.lists { border-left-color: #28a745; }
+.kpi-card.health { border-left-color: #17a2b8; }
+.kpi-title {
+    font-size: 0.85em;
+    color: #6c757d;
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+.kpi-value {
+    font-size: 1.6em;
+    font-weight: bold;
+    color: #343a40;
+    margin-top: 5px;
+}
+.dashboard-placeholder {
+    background: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 40px;
+    text-align: center;
+    color: #6c757d;
 }
