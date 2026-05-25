@@ -12,7 +12,6 @@ import org.ashroev.repository.ProductInfoRepository;
 import org.ashroev.repository.ProductRepository;
 import org.ashroev.repository.ShoppingListRepository;
 import org.ashroev.repository.ProductHistoryRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -117,6 +116,7 @@ public class InventoryManager {
     /**
      * Списание продукта из запаса (UC-02)
      */
+    @Transactional
     public void writeOffProduct(Integer productId, Double amount, String reason) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Продукт не найден"));
@@ -126,8 +126,31 @@ public class InventoryManager {
         double currentQty = Math.round(product.getQuantity() * 1000.0) / 1000.0;
         double amountToOff = Math.round(amount * 1000.0) / 1000.0;
 
+        if (amountToOff <= 0) {
+            throw new IllegalArgumentException("Количество для списания должно быть больше нуля");
+        }
+
         if (amountToOff > currentQty) {
             throw new IllegalArgumentException("Количество для списания превышает текущий остаток!");
+        }
+
+        if (!"DELETE".equalsIgnoreCase(reason)) {
+            WriteOffReason writeOffReason;
+            if ("USED".equalsIgnoreCase(reason)) {
+                writeOffReason = WriteOffReason.USED;
+            } else if ("EXPIRED".equalsIgnoreCase(reason)) {
+                writeOffReason = WriteOffReason.EXPIRED;
+            } else {
+                throw new IllegalArgumentException("Неверная причина списания: " + reason);
+            }
+
+            ProductHistory logEntry = new ProductHistory(
+                    product.getProductInfo(),
+                    amountToOff,
+                    writeOffReason,
+                    LocalDateTime.now()
+            );
+            productHistoryRepository.save(logEntry);
         }
 
         double newQuantity = currentQty - amountToOff;
