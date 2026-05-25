@@ -75,157 +75,161 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 
-<script th:inline="javascript">
-    /*<![CDATA[*/
-    const labels = /*[[${categoryLabels}]]*/ [];
-    const dataValues = /*[[${categoryData}]]*/ [];
+<script>
+    async function loadDashboardCharts() {
+        const response = await fetch('/api/dashboard/stats', {
+            headers: { 'Accept': 'application/json' }
+        });
 
-    const ctx = document.getElementById('categoryChart').getContext('2d');
-    const categoryChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Кол-во',
-                data: dataValues,
-                backgroundColor: ['#4caf50', '#2196f3', '#ff9800', '#f44336', '#9c27b0', '#00bcd4', '#ffc107'],
-                hoverOffset: 4
-            }]
-        },
-        // Подключаем плагин
-        plugins: [ChartDataLabels],
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { position: 'bottom' },
-                title: { display: true, text: 'Запасы по категориям', font: { size: 18 } },
-                // Настройка вывода процентов
-                datalabels: {
-                    color: '#fff',
-                    font: { weight: 'bold' },
-                    formatter: (value, ctx) => {
-                        let sum = 0;
-                        let dataArr = ctx.chart.data.datasets[0].data;
-                        dataArr.map(data => { sum += data; });
-                        let percentage = (value * 100 / sum).toFixed(1) + "%";
-                        return percentage;
+        if (!response.ok) {
+            throw new Error('Не удалось загрузить данные графиков');
+        }
+
+        const dashboard = await response.json();
+        renderCategoryChart(dashboard.categoryChart);
+        renderExpiryChart(dashboard.expiryChart);
+        renderDisposalChart(dashboard.disposalChart);
+    }
+
+    function renderCategoryChart(chartData) {
+        const ctx = document.getElementById('categoryChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: chartData.labels,
+                datasets: [{
+                    label: 'Кол-во',
+                    data: chartData.data,
+                    backgroundColor: ['#4caf50', '#2196f3', '#ff9800', '#f44336', '#9c27b0', '#00bcd4', '#ffc107'],
+                    hoverOffset: 4
+                }]
+            },
+            plugins: [ChartDataLabels],
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    title: { display: true, text: 'Запасы по категориям', font: { size: 18 } },
+                    datalabels: {
+                        color: '#fff',
+                        font: { weight: 'bold' },
+                        formatter: (value, ctx) => {
+                            const dataArr = ctx.chart.data.datasets[0].data;
+                            const sum = dataArr.reduce((total, item) => total + Number(item), 0);
+                            return sum > 0 ? (Number(value) * 100 / sum).toFixed(1) + '%' : '';
+                        }
                     }
                 }
             }
-        }
-    });
-
-// --- ГРАФИК 2: СРОКИ ГОДНОСТИ (ИСПРАВЛЕННЫЙ) ---
-const expLabels = /*[[${expiryLabels}]]*/ [];
-const expDataValues = /*[[${expiryData}]]*/ [];
-
-// Максимальное значение для расчёта оттенка (не меньше 1)
-const maxExpValue = Math.max(...expDataValues, 1);
-
-// Генерируем цвета: красный (0 дней) -> оранжевый (max дней)
-const expiryColors = expDataValues.map(value => {
-    const ratio = value / maxExpValue;      // 0 (близко к концу) ... 1 (много дней)
-    const hue = ratio * 30;                // 0° (красный) -> 30° (оранжевый)
-    return `hsl(${hue}, 100%, 50%)`;
-});
-
-const ctxExpiry = document.getElementById('expiryChart').getContext('2d');
-const expiryChart = new Chart(ctxExpiry, {
-    type: 'bar',
-    data: {
-        labels: expLabels,
-        datasets: [{
-            label: 'Дней осталось',
-            data: expDataValues,
-            backgroundColor: expiryColors,     // ← индивидуальные цвета столбцов
-            borderRadius: 4,
-            minBarLength: 3                    // ← столбец со значением 0 тоже виден
-        }]
-    },
-    options: {
-        indexAxis: 'y',
-        responsive: true,
-        plugins: {
-            legend: { display: false },
-            title: {
-                display: true,
-                text: 'Ближайшие сроки годности (Топ-5)',
-                font: { size: 18 }
-            },
-            datalabels: {
-                display: false
-            }
-        },
-        scales: {
-            x: {
-                beginAtZero: true,
-                title: { display: true, text: 'Осталось дней' }
-            }
-        }
+        });
     }
-});
-// Настройка линейного графика динамики списания
-const ctxLine = document.getElementById('disposalLineChart').getContext('2d');
-new Chart(ctxLine, {
-    type: 'line',
-    data: {
-        labels: [[${lineChartLabels}]],
-        datasets: [
-            {
-                label: 'Использовано',
-                data: [[${consumedData}]],
-                borderColor: '#0d6efd',       // Красивый синий Bootstrap цвет
-                backgroundColor: 'rgba(13, 110, 253, 0.05)', // Легкая синяя заливка под линией
-                tension: 0.3,                 // Эффект сглаживания (кривая вместо ломаной)
-                pointRadius: 5,               // Размер точек
-                pointBackgroundColor: '#0d6efd',
-                pointHoverRadius: 7,          // Увеличение точки при наведении
-                fill: true
+
+    function renderExpiryChart(chartData) {
+        const expDataValues = chartData.data;
+        const maxExpValue = Math.max(...expDataValues, 1);
+        const expiryColors = expDataValues.map(value => {
+            const ratio = value / maxExpValue;
+            const hue = ratio * 30;
+            return `hsl(${hue}, 100%, 50%)`;
+        });
+
+        const ctxExpiry = document.getElementById('expiryChart').getContext('2d');
+        new Chart(ctxExpiry, {
+            type: 'bar',
+            data: {
+                labels: chartData.labels,
+                datasets: [{
+                    label: 'Дней осталось',
+                    data: expDataValues,
+                    backgroundColor: expiryColors,
+                    borderRadius: 4,
+                    minBarLength: 3
+                }]
             },
-            {
-                label: 'Просрочено',
-                data: [[${expiredData}]],
-                borderColor: '#dc3545',       // Насыщенный красный цвет
-                backgroundColor: 'rgba(220, 53, 69, 0.05)',  // Легкая красная заливка под линией
-                tension: 0.3,                 // Эффект сглаживания
-                pointRadius: 5,               // Размер точек
-                pointBackgroundColor: '#dc3545',
-                pointHoverRadius: 7,          // Увеличение точки при наведении
-                fill: true
-            }
-        ]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'top',
-                labels: {
-                    boxWidth: 12,
-                    font: { size: 13 }
-                }
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: {
-                    stepSize: 1 // Так как продукты штучные, шаги на оси Y делаем целыми числами
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    title: {
+                        display: true,
+                        text: 'Ближайшие сроки годности (Топ-5)',
+                        font: { size: 18 }
+                    },
+                    datalabels: {
+                        display: false
+                    }
                 },
-                grid: {
-                    color: 'rgba(0, 0, 0, 0.05)' // Едва заметная сетка
-                }
-            },
-            x: {
-                grid: {
-                    display: false // Убираем вертикальную сетку, чтобы график выглядел чище
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Осталось дней' }
+                    }
                 }
             }
-        }
+        });
     }
-});
-    /*]]>*/
+
+    function renderDisposalChart(chartData) {
+        const ctxLine = document.getElementById('disposalLineChart').getContext('2d');
+        new Chart(ctxLine, {
+            type: 'line',
+            data: {
+                labels: chartData.labels,
+                datasets: [
+                    {
+                        label: 'Использовано',
+                        data: chartData.consumedData,
+                        borderColor: '#0d6efd',
+                        backgroundColor: 'rgba(13, 110, 253, 0.05)',
+                        tension: 0.3,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#0d6efd',
+                        pointHoverRadius: 7,
+                        fill: true
+                    },
+                    {
+                        label: 'Просрочено',
+                        data: chartData.expiredData,
+                        borderColor: '#dc3545',
+                        backgroundColor: 'rgba(220, 53, 69, 0.05)',
+                        tension: 0.3,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#dc3545',
+                        pointHoverRadius: 7,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            boxWidth: 12,
+                            font: { size: 13 }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 },
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadDashboardCharts().catch(error => console.error(error));
+    });
 </script>
 </body>
 </html>

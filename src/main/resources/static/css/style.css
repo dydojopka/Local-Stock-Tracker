@@ -59,6 +59,35 @@ h2 { color: #333; margin-top: 0; }
     pointer-events: none;
     border-left: 4px solid #007bff;
 }
+.nav-auth {
+    border-top: 1px solid #e9ecef;
+    margin-top: 10px;
+    padding-top: 12px;
+}
+.nav-user {
+    color: #495057;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+.nav-user span {
+    display: block;
+    color: #6c757d;
+    font-size: 12px;
+    margin-bottom: 3px;
+}
+.logout-button {
+    width: 100%;
+    padding: 9px 12px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+.logout-button:hover {
+    background-color: #c82333;
+}
 
 /* Общие стили для таблиц */
 table {
@@ -137,6 +166,27 @@ th {
     padding: 10px;
     border-radius: 5px;
     margin-bottom: 15px;
+}
+.field-error {
+    color: #721c24;
+    font-size: 13px;
+    margin-top: 6px;
+}
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    box-sizing: border-box;
+}
+.auth-card {
+    width: 100%;
+    max-width: 430px;
+    background: white;
+    padding: 28px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
 }
 
 /*catalog*/

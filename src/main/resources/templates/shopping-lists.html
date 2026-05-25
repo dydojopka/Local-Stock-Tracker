@@ -2,6 +2,8 @@
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
     <title>Списки покупок</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
@@ -121,8 +123,14 @@
         const isPurchased = checkboxElem.checked;
 
         // Отправляем тихий запрос на сервер
+        const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+
         fetch(`/shopping/toggle-item/${itemId}?purchased=${isPurchased}`, {
-            method: 'POST'
+            method: 'POST',
+            headers: {
+                [csrfHeader]: csrfToken
+            }
         }).then(response => {
             if(response.ok) {
                 // Визуально зачеркиваем текст

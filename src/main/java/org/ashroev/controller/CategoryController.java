@@ -1,8 +1,8 @@
 package org.ashroev.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.ashroev.model.Category;
 import org.ashroev.repository.CategoryRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -11,10 +11,10 @@ import java.util.List;
 
 @Controller
 @RequestMapping("/categories")
+@RequiredArgsConstructor
 public class CategoryController {
 
-    @Autowired
-    private CategoryRepository categoryRepository;
+    private final CategoryRepository categoryRepository;
 
     // Отображение списка категорий
     @GetMapping

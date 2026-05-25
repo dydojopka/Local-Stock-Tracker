@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<html lang="ru"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
 
 <div th:fragment="nav-menu(activePage)" class="nav-menu">
@@ -31,6 +33,21 @@
     <a th:href="@{/catalog}"
        th:classappend="${activePage == 'catalog'} ? 'active' : ''"
     >⚙️ Остатки</a>
+
+    <div class="nav-auth" sec:authorize="isAuthenticated()">
+        <div class="nav-user">
+            <span>Пользователь</span>
+            <strong sec:authentication="name">user</strong>
+        </div>
+        <form th:action="@{/logout}" method="post">
+            <button type="submit" class="logout-button">Выйти</button>
+        </form>
+    </div>
+
+    <div class="nav-auth" sec:authorize="!isAuthenticated()">
+        <a th:href="@{/login}">Войти</a>
+        <a th:href="@{/register}">Регистрация</a>
+    </div>
 
 </div>
 

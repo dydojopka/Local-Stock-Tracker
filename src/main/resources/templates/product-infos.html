@@ -26,32 +26,36 @@
 
         <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #ddd;">
             <h3>Добавить продукт в справочник</h3>
-            <form th:action="@{/directory/add}" method="post">
+            <form th:action="@{/directory/add}" th:object="${productInfoForm}" method="post">
                 <div class="form-group">
                     <label for="name">Название продукта:</label>
-                    <input type="text" id="name" name="name" class="form-control" required>
+                    <input type="text" id="name" th:field="*{name}" class="form-control" required>
+                    <div th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="field-error"></div>
                 </div>
 
                 <div class="form-group">
                     <label for="barcode">Штрихкод:</label>
-                    <input type="text" id="barcode" name="barcode" class="form-control">
+                    <input type="text" id="barcode" th:field="*{barcode}" class="form-control">
+                    <div th:if="${#fields.hasErrors('barcode')}" th:errors="*{barcode}" class="field-error"></div>
                 </div>
 
                 <div class="form-group">
                     <label for="minQuantity">Минимальный остаток:</label>
-                    <input type="number" step="0.1" min="0" id="minQuantity" name="minQuantity" class="form-control"
+                    <input type="number" step="0.1" min="0" id="minQuantity" th:field="*{minQuantity}" class="form-control"
                            required>
+                    <div th:if="${#fields.hasErrors('minQuantity')}" th:errors="*{minQuantity}" class="field-error"></div>
                 </div>
 
                 <div class="form-group">
                     <label for="categoryId">Категория:</label>
-                    <select id="categoryId" name="categoryId" class="form-control" required>
+                    <select id="categoryId" th:field="*{categoryId}" class="form-control" required>
                         <option value="">Выберите категорию...</option>
                         <option th:each="cat : ${categories}"
                                 th:value="${cat.id}"
                                 th:text="${cat.name}">Категория
                         </option>
                     </select>
+                    <div th:if="${#fields.hasErrors('categoryId')}" th:errors="*{categoryId}" class="field-error"></div>
                 </div>
                 <button type="submit" class="btn-submit">Сохранить</button>
             </form>

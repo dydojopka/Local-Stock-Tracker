@@ -14,32 +14,34 @@
         <p><strong>Товар:</strong> <span th:text="${product.productInfo.name}"></span></p>
         <p><strong>Текущий остаток:</strong> <span th:text="${product.quantity}"></span></p>
 
-        <div th:if="${param.error}" class="error-msg">
-            Ошибка: Введенное количество превышает остаток!
-        </div>
+        <form th:action="@{/products/write-off}" th:object="${writeOffForm}" method="post">
+            <div th:if="${#fields.hasGlobalErrors()}" class="error-msg">
+                <div th:each="err : ${#fields.globalErrors()}" th:text="${err}">Ошибка списания</div>
+            </div>
 
-        <form th:action="@{/products/write-off}" method="post">
-            <input type="hidden" name="productId" th:value="${product.id}">
+            <input type="hidden" th:field="*{productId}">
 
             <div class="form-group">
                 <label for="amount">Количество к списанию:</label>
                 <div class="input-group">
-                    <input type="number" step="0.01" id="amount" name="amount" class="form-control" required min="0.01">
+                    <input type="number" step="0.01" id="amount" th:field="*{amount}" class="form-control" required min="0.01">
 
                     <button type="button" class="btn-secondary"
                             th:onclick="|document.getElementById('amount').value = ${product.quantity}|">
                         Списать всё
                     </button>
                 </div>
+                <div th:if="${#fields.hasErrors('amount')}" th:errors="*{amount}" class="field-error"></div>
             </div>
 
             <div class="form-group">
                 <label for="reason">Причина списания:</label>
-                <select id="reason" name="reason" class="form-control" required>
+                <select id="reason" th:field="*{reason}" class="form-control" required>
                     <option value="USED">Использовано</option>
                     <option value="EXPIRED">Просрочено</option>
                     <option value="DELETE">Удалить</option>
                 </select>
+                <div th:if="${#fields.hasErrors('reason')}" th:errors="*{reason}" class="field-error"></div>
             </div>
 
             <button type="submit" class="btn-submit">Списать</button>

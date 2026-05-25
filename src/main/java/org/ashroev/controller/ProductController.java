@@ -1,19 +1,21 @@
 package org.ashroev.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.ashroev.dto.ProductCreateRequest;
+import org.ashroev.dto.WriteOffRequest;
 import org.ashroev.model.Product;
 import org.ashroev.repository.ProductInfoRepository;
 import org.ashroev.service.InventoryManager;
-import org.springframework.format.annotation.DateTimeFormat; // Важный импорт для работы с датами
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PathVariable;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Controller
@@ -27,29 +29,45 @@ public class ProductController {
     // Отображение формы списания для конкретного продукта
     @GetMapping("/write-off/{id}")
     public String showWriteOffForm(@PathVariable Integer id, Model model) {
-        Product product = inventoryManager.getAvailableStock().stream()
-                .filter(p -> p.getId().equals(id))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Продукт не найден"));
+        Product product = inventoryManager.getAvailableProduct(id);
+        WriteOffRequest writeOffForm = new WriteOffRequest();
+        writeOffForm.setProductId(id);
 
         model.addAttribute("product", product);
+        model.addAttribute("writeOffForm", writeOffForm);
         return "write-off"; // Имя HTML-шаблона
     }
 
     // Обработка отправки формы списания (ТЕПЕРЬ ПОЛНОСТЬЮ СОВПАДАЕТ С ИСТОРИЕЙ)
     @PostMapping("/write-off")
     public String writeOffProduct(
-            @RequestParam Integer productId,
-            @RequestParam Double amount,
-            @RequestParam String reason) {
+            @Valid @ModelAttribute("writeOffForm") WriteOffRequest writeOffForm,
+            BindingResult bindingResult,
+            Model model) {
+
+        if (writeOffForm.getProductId() == null) {
+            throw new IllegalArgumentException("Не выбран продукт для списания");
+        }
+
+        Product product = inventoryManager.getAvailableProduct(writeOffForm.getProductId());
+
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("product", product);
+            return "write-off";
+        }
 
         try {
             // Передаем причину (USED, EXPIRED, DELETE) в сервис
-            inventoryManager.writeOffProduct(productId, amount, reason);
+            inventoryManager.writeOffProduct(
+                    writeOffForm.getProductId(),
+                    writeOffForm.getAmount(),
+                    writeOffForm.getReason()
+            );
             return "redirect:/products?writeOffSuccess";
         } catch (IllegalArgumentException e) {
-            // Если ошибка (например, списали больше, чем есть), возвращаем обратно с сообщением
-            return "redirect:/products/write-off/" + productId + "?error";
+            bindingResult.reject("writeOffError", e.getMessage());
+            model.addAttribute("product", product);
+            return "write-off";
         }
     }
 
@@ -64,6 +82,9 @@ public class ProductController {
     // Отображение формы добавления товара
     @GetMapping("/add")
     public String showAddProductForm(Model model) {
+        if (!model.containsAttribute("productForm")) {
+            model.addAttribute("productForm", new ProductCreateRequest());
+        }
         model.addAttribute("productInfos", productInfoRepository.findAll());
         return "add-product";
     }
@@ -71,11 +92,20 @@ public class ProductController {
     // Обработка отправки формы
     @PostMapping("/add")
     public String addProduct(
-            @RequestParam Integer productInfoId,
-            @RequestParam Double quantity,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate expiryDate) { // Исправлено здесь
+            @Valid @ModelAttribute("productForm") ProductCreateRequest productForm,
+            BindingResult bindingResult,
+            Model model) {
 
-        inventoryManager.addProduct(productInfoId, quantity, expiryDate);
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("productInfos", productInfoRepository.findAll());
+            return "add-product";
+        }
+
+        inventoryManager.addProduct(
+                productForm.getProductInfoId(),
+                productForm.getQuantity(),
+                productForm.getExpiryDate()
+        );
 
         // После сохранения перенаправляем на главную страницу с флагом успеха
         return "redirect:/products?success";

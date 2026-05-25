@@ -1,6 +1,6 @@
 package org.ashroev.model;
 
-import jakarta.persistence.*; // Если у тебя старая версия Spring Boot, здесь будет javax.persistence.*
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "categories")

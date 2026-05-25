@@ -1,5 +1,9 @@
 package org.ashroev.service;
 
+import org.ashroev.dto.ChartDataResponse;
+import org.ashroev.dto.DashboardStatsResponse;
+import org.ashroev.dto.DisposalChartResponse;
+import org.ashroev.exception.ResourceNotFoundException;
 import org.ashroev.repository.ShoppingListItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.ashroev.model.Product;
@@ -21,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
@@ -42,7 +47,7 @@ public class InventoryManager {
     public void writeOffProduct(Integer productId, double quantityToRemove, String actionType) {
         // Находим партию продукта на складе
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("Продукт на складе не найден с ID: " + productId));
+                .orElseThrow(() -> new ResourceNotFoundException("Продукт на складе не найден с ID: " + productId));
 
         // Нельзя списать больше, чем есть на складе
         if (quantityToRemove > product.getQuantity()) {
@@ -86,7 +91,7 @@ public class InventoryManager {
     public Product addProduct(Integer productInfoId, Double quantity, LocalDate expiryDate) {
         // Ищем описание продукта по ID
         ProductInfo info = productInfoRepository.findById(productInfoId)
-                .orElseThrow(() -> new RuntimeException("Описание продукта не найдено"));
+                .orElseThrow(() -> new ResourceNotFoundException("Описание продукта не найдено"));
 
         // Создаем физическую партию
         Product product = new Product();
@@ -114,12 +119,26 @@ public class InventoryManager {
     }
 
     /**
+     * Получить конкретную доступную партию продукта.
+     */
+    public Product getAvailableProduct(Integer productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Продукт не найден"));
+
+        if (product.getQuantity() == null || product.getQuantity() <= 0) {
+            throw new ResourceNotFoundException("Продукт не найден среди текущих остатков");
+        }
+
+        return product;
+    }
+
+    /**
      * Списание продукта из запаса (UC-02)
      */
     @Transactional
     public void writeOffProduct(Integer productId, Double amount, String reason) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("Продукт не найден"));
+                .orElseThrow(() -> new ResourceNotFoundException("Продукт не найден"));
 
         // Округляем текущее количество и списываемое до 3 знаков после запятой,
         // чтобы избежать проблемы 0.8000000000000001
@@ -325,11 +344,12 @@ public class InventoryManager {
                 .filter(p -> p.getProductInfo() != null && p.getProductInfo().getCategory() != null)
                 .collect(Collectors.groupingBy(
                         p -> p.getProductInfo().getCategory().getName(),
+                        LinkedHashMap::new,
                         Collectors.summingDouble(Product::getQuantity) // <-- Теперь график покажет реальный объем еды!
                 ));
 
-        stats.put("categoryLabels", categoryDistribution.keySet());
-        stats.put("categoryData", categoryDistribution.values());
+        stats.put("categoryLabels", new ArrayList<>(categoryDistribution.keySet()));
+        stats.put("categoryData", new ArrayList<>(categoryDistribution.values()));
 
         // Топ-5 продуктов с ближайшим сроком годности
         List<Product> topExpiring = activeProducts.stream()
@@ -385,5 +405,33 @@ public class InventoryManager {
         stats.put("expiredData", expiredData);
 
         return stats;
+    }
+
+    @SuppressWarnings("unchecked")
+    public DashboardStatsResponse getDashboardStatsResponse() {
+        Map<String, Object> stats = getDashboardStats();
+
+        return new DashboardStatsResponse(
+                ((Number) stats.get("totalProducts")).longValue(),
+                ((Number) stats.get("totalQuantity")).doubleValue(),
+                ((Number) stats.get("expiredCount")).longValue(),
+                ((Number) stats.get("expiredQuantity")).doubleValue(),
+                ((Number) stats.get("activeListsCount")).longValue(),
+                ((Number) stats.get("lowStockCount")).longValue(),
+                ((Number) stats.get("healthScore")).intValue(),
+                new ChartDataResponse<>(
+                        (List<String>) stats.get("categoryLabels"),
+                        (List<Double>) stats.get("categoryData")
+                ),
+                new ChartDataResponse<>(
+                        (List<String>) stats.get("expiryLabels"),
+                        (List<Long>) stats.get("expiryData")
+                ),
+                new DisposalChartResponse(
+                        (List<String>) stats.get("lineChartLabels"),
+                        (List<Long>) stats.get("consumedData"),
+                        (List<Long>) stats.get("expiredData")
+                )
+        );
     }
 }
