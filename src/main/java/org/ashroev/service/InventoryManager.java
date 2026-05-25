@@ -37,7 +37,7 @@ public class InventoryManager {
     private final ShoppingListRepository shoppingListRepository;
     private final ShoppingListItemRepository shoppingListItemRepository;
 
-    private ProductHistoryRepository productHistoryRepository;
+    private final ProductHistoryRepository productHistoryRepository;
 
     @Transactional
     public void writeOffProduct(Integer productId, double quantityToRemove, String actionType) {
@@ -349,21 +349,12 @@ public class InventoryManager {
             LocalDateTime endOfDay = date.atTime(23, 59, 59);
 
             // Считаем использованные за этот день
-            long consumedCount = productHistoryRepository.countByReasonAndTimestampBetween(
-                    WriteOffReason.USED, startOfDay, endOfDay);
-
-            // Считаем просроченные за этот день
-            long expiredCount = productHistoryRepository.countByReasonAndTimestampBetween(
-                    WriteOffReason.EXPIRED, startOfDay, endOfDay);
+            long consumedCount = productHistoryRepository.countByReasonAndActionDateBetween(WriteOffReason.USED, startOfDay, endOfDay);
+            long expiredCount = productHistoryRepository.countByReasonAndActionDateBetween(WriteOffReason.EXPIRED, startOfDay, endOfDay);
 
             consumedData.add(consumedCount);
             expiredData.add(expiredCount);
         }
-
-        // Передаем списки в модель отображения
-        stats.put("lineChartLabels", lineChartLabels);
-        stats.put("consumedData", consumedData);
-        stats.put("expiredData", expiredData);
 
         // Передаем списки в модель отображения
         stats.put("lineChartLabels", lineChartLabels);

@@ -7,5 +7,5 @@ import java.time.LocalDateTime;
 
 public interface ProductHistoryRepository extends JpaRepository<ProductHistory, Long> {
     // Этот метод посчитает, сколько продуктов было списано по конкретной причине за промежуток времени
-    long countByReasonAndTimestampBetween(WriteOffReason reason, LocalDateTime start, LocalDateTime end);
+    long countByReasonAndActionDateBetween(WriteOffReason reason, LocalDateTime start, LocalDateTime end);
 }
