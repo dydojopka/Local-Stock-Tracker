@@ -15,13 +15,11 @@ public class HomeController {
 
     @GetMapping("/")
     public String index(Model model) {
-        // Получаем просчитанную статистику из сервиса
         Map<String, Object> stats = inventoryManager.getDashboardStats();
 
-        // Передаем переменные в Thymeleaf
         model.addAllAttributes(stats);
-        model.addAttribute("activePage", "home"); // Чтобы кнопка в меню подсвечивалась
+        model.addAttribute("activePage", "home");
 
-        return "home"; // Имя файла шаблона (home.html)
+        return "home";
     }
 }

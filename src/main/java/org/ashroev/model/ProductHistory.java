@@ -11,7 +11,7 @@ public class ProductHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Связываем с общей информацией о продукте (чтобы знать имя, категорию и т.д.)
+    // Связываем с общей информацией о
     @ManyToOne
     @JoinColumn(name = "product_info_id")
     private ProductInfo productInfo;
@@ -23,10 +23,9 @@ public class ProductHistory {
     @Enumerated(EnumType.STRING)
     private WriteOffReason reason;
 
-    // Точная дата и время списания (потребуется для графиков по дням/месяцам)
+    // Точная дата и время списания
     private LocalDateTime actionDate;
 
-    // Пустой конструктор для Hibernate
     public ProductHistory() {
     }
 

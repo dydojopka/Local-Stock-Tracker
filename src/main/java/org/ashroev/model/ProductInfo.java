@@ -5,8 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /*
-Класс описаний, который хранит постоянные метаданные товара.
-Он включает наименование, штрих-код и минимально допустимый запас.
+ * Справочник продуктов
  */
 
 @Entity
@@ -28,7 +27,6 @@ public class ProductInfo {
     @Column(name = "min_quantity", nullable = false)
     private Double minQuantity;
 
-    // Связь Category (1) - ProductInfo (*)
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;

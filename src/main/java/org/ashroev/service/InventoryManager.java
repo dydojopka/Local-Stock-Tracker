@@ -35,7 +35,6 @@ import java.time.format.DateTimeFormatter;
 @RequiredArgsConstructor
 public class InventoryManager {
 
-    // Подключаем наши репозитории для работы с БД
     private final ProductRepository productRepository;
     private final ProductInfoRepository productInfoRepository;
     private final ShoppingListRepository shoppingListRepository;
@@ -45,7 +44,7 @@ public class InventoryManager {
 
     @Transactional
     public void writeOffProduct(Integer productId, double quantityToRemove, String actionType) {
-        // Находим партию продукта на складе
+        // Получаем партию
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Продукт на складе не найден с ID: " + productId));
 
@@ -54,7 +53,7 @@ public class InventoryManager {
             throw new IllegalArgumentException("Нельзя списать больше, чем есть в наличии");
         }
 
-        // Логика сохранения в историю (только если это НЕ простое удаление ошибки)
+        // Запись в историю
         if (!"DELETE".equalsIgnoreCase(actionType)) {
             WriteOffReason reason;
             if ("USED".equalsIgnoreCase(actionType)) {
@@ -65,7 +64,7 @@ public class InventoryManager {
                 throw new IllegalArgumentException("Неверная причина списания: " + actionType);
             }
 
-            // Создаем запись в историю
+            // Сохраняем историю
             ProductHistory logEntry = new ProductHistory(
                     product.getProductInfo(),
                     quantityToRemove,
@@ -75,7 +74,7 @@ public class InventoryManager {
             productHistoryRepository.save(logEntry);
         }
 
-        // Изменяем остаток на складе или удаляем запись, если списали всё подчистую
+        // Обновляем остаток
         if (quantityToRemove == product.getQuantity()) {
             productRepository.delete(product);
         } else {
@@ -85,15 +84,14 @@ public class InventoryManager {
     }
 
     /**
-     * Инициация процесса постановки новой партии товара на учет.
-     * Создает связь между ProductInfo и новым Product[cite: 88].
+     * Добавление партии товара
      */
     public Product addProduct(Integer productInfoId, Double quantity, LocalDate expiryDate) {
         // Ищем описание продукта по ID
         ProductInfo info = productInfoRepository.findById(productInfoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Описание продукта не найдено"));
 
-        // Создаем физическую партию
+        // Создаем партию
         Product product = new Product();
         product.setProductInfo(info);
         product.setQuantity(quantity);
@@ -104,7 +102,7 @@ public class InventoryManager {
     }
 
     /**
-     * Аудит текущих остатков и проверка сроков годности
+     * Проверка сроков годности
      */
     public List<Product> checkStock() {
         // Находим все продукты, срок годности которых истекает сегодня или уже истек
@@ -112,14 +110,14 @@ public class InventoryManager {
     }
 
     /**
-     * Получить список всех продуктов, которые физически есть на складе
+     * Текущие остатки
      */
     public List<Product> getAvailableStock() {
         return productRepository.findByQuantityGreaterThan(0.0);
     }
 
     /**
-     * Получить конкретную доступную партию продукта.
+     * Получение партии продукта
      */
     public Product getAvailableProduct(Integer productId) {
         Product product = productRepository.findById(productId)
@@ -133,15 +131,14 @@ public class InventoryManager {
     }
 
     /**
-     * Списание продукта из запаса (UC-02)
+     * Списание товара
      */
     @Transactional
     public void writeOffProduct(Integer productId, Double amount, String reason) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Продукт не найден"));
 
-        // Округляем текущее количество и списываемое до 3 знаков после запятой,
-        // чтобы избежать проблемы 0.8000000000000001
+        // Защита от ошибок double
         double currentQty = Math.round(product.getQuantity() * 1000.0) / 1000.0;
         double amountToOff = Math.round(amount * 1000.0) / 1000.0;
 
@@ -174,7 +171,7 @@ public class InventoryManager {
 
         double newQuantity = currentQty - amountToOff;
 
-        // Если остаток меньше одной тысячной (те самые E-16), считаем, что продукт кончился
+        // Считаем остаток нулевым
         if (newQuantity < 0.001) {
             newQuantity = 0.0;
         }
@@ -184,8 +181,7 @@ public class InventoryManager {
     }
 
     /**
-     * Алгоритм автоматического формирования списка покупок на основе сравнения
-     * текущего количества товара с атрибутом minQuantity в классе ProductInfo
+     * Генерация списка покупок
      */
     public void generateShoppingList() {
         // Получаем справочник всех продуктов
@@ -193,7 +189,7 @@ public class InventoryManager {
         List<ShoppingListItem> itemsToBuy = new ArrayList<>();
 
         for (ProductInfo info : allProducts) {
-            // Считаем суммарный текущий остаток, ИГНОРИРУЯ просроченные продукты
+            // Считаем остаток, ИГНОРИРУЯ просроченные продукты
             LocalDate today = LocalDate.now();
             double currentTotal = productRepository.findByProductInfo(info).stream()
                     // Оставляем только те партии, где срок годности еще не истек
@@ -201,7 +197,7 @@ public class InventoryManager {
                     .mapToDouble(Product::getQuantity)
                     .sum();
 
-            // Сравниваем с заданным минимальным порогом
+            // Проверка минимального остатка
             if (currentTotal < info.getMinQuantity()) {
                 // Вычисляем, сколько нужно докупить
                 double deficit = info.getMinQuantity() - currentTotal;
@@ -221,12 +217,12 @@ public class InventoryManager {
             throw new IllegalStateException("Запасы в норме, генерация не требуется");
         }
 
-        // Создаем документ "Список покупок" и сохраняем всё в БД
+        // Создаем список покупок
         ShoppingList list = new ShoppingList();
         list.setCreatedDate(LocalDate.now());
         list.setStatus("Активен");
 
-        // Устанавливаем связь строк с самим списком
+        // Привязка элементов
         for (ShoppingListItem item : itemsToBuy) {
             item.setShoppingList(list);
         }

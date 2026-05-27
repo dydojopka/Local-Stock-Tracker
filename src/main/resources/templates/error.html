@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Ошибка - Учет продуктов</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="page-wrapper">
+    <div th:replace="~{fragments/header :: nav-menu(activePage='')}"></div>
+
+    <div class="container">
+        <h2 th:text="${error}">Ошибка</h2>
+        <div class="error-msg">
+            <strong th:text="${status}">500</strong>
+            <span th:text="${message}">Не удалось выполнить операцию.</span>
+        </div>
+        <p class="subtitle">Адрес запроса: <span th:text="${path}">/</span></p>
+        <a th:href="@{/}" class="btn-cancel">Вернуться на главную</a>
+    </div>
+</div>
+</body>
+</html>

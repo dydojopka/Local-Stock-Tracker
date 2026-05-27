@@ -8,9 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /*
-Класс служит агрегатором (заголовком) списка планируемых покупок.
-У него есть дата создания, статус (например, «Активен», «Утверждён»)
-и связь со всеми позициями внутри этого списка.
+ * Список покупок
  */
 
 @Entity
@@ -27,13 +25,12 @@ public class ShoppingList {
     private LocalDate createdDate;
 
     @Column(nullable = false)
-    private String status; // Будет хранить статус списка (например, "PENDING", "APPROVED")
+    private String status; // Будет хранить статус списка ("PENDING", "APPROVED")
 
-    // Связь один-ко-многим с элементами списка покупок
     @OneToMany(mappedBy = "shoppingList", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ShoppingListItem> items = new ArrayList<>();
 
-    // Метод из диаграммы классов для подсчета общего количества позиций
+    // Количество позиций
     public Integer totalItems() {
         return items != null ? items.size() : 0;
     }

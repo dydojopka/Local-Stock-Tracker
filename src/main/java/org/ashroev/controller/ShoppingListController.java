@@ -28,19 +28,19 @@ public class ShoppingListController {
         return "shopping-lists"; // Имя HTML шаблона
     }
 
-    // Обработка нажатия кнопки генерации
+    // Генерация списка
     @PostMapping("/generate")
     public String generateList() {
         try {
             inventoryManager.generateShoppingList();
             return "redirect:/shopping?success";
         } catch (IllegalStateException e) {
-            // Перехватываем наше сообщение "Запасы в норме" и выводим на экран
+            // Список не требуется
             return "redirect:/shopping?notNeeded";
         }
     }
 
-    // Обработка удаления списка
+    // Удаление списка
     @PostMapping("/delete/{id}")
     public String deleteList(@PathVariable Integer id) {
         shoppingListRepository.deleteById(id);

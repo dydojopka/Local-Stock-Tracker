@@ -26,7 +26,7 @@ public class ProductController {
     private final InventoryManager inventoryManager;
     private final ProductInfoRepository productInfoRepository;
 
-    // Отображение формы списания для конкретного продукта
+    // Форма списания
     @GetMapping("/write-off/{id}")
     public String showWriteOffForm(@PathVariable Integer id, Model model) {
         Product product = inventoryManager.getAvailableProduct(id);
@@ -38,7 +38,7 @@ public class ProductController {
         return "write-off"; // Имя HTML-шаблона
     }
 
-    // Обработка отправки формы списания (ТЕПЕРЬ ПОЛНОСТЬЮ СОВПАДАЕТ С ИСТОРИЕЙ)
+    // Списание товара
     @PostMapping("/write-off")
     public String writeOffProduct(
             @Valid @ModelAttribute("writeOffForm") WriteOffRequest writeOffForm,

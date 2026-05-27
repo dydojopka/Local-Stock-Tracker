@@ -16,11 +16,9 @@ public class Category {
     @Column(name = "description")
     private String description;
 
-    // Пустой конструктор (обязателен для Hibernate)
     public Category() {
     }
 
-    // --- Геттеры и Сеттеры ---
 
     public Integer getId() {
         return id;
@@ -42,7 +40,6 @@ public class Category {
         return description;
     }
 
-    // Тот самый метод, на отсутствие которого ругалась Java
     public void setDescription(String description) {
         this.description = description;
     }

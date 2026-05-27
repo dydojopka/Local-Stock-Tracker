@@ -48,7 +48,7 @@ public class CatalogController {
         info.setMinQuantity(minQuantityRequest.getMinQuantity());
         productInfoRepository.save(info);
 
-        return "redirect:/catalog"; // Перезагружаем страницу
+        return "redirect:/catalog";
     }
 
     private String getFirstErrorMessage(BindingResult bindingResult) {

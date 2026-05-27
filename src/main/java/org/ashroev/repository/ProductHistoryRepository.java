@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 
 public interface ProductHistoryRepository extends JpaRepository<ProductHistory, Long> {
-    // Этот метод посчитает, сколько продуктов было списано по конкретной причине за промежуток времени
+    // Подсчёт списаний за период
     long countByReasonAndActionDateBetween(WriteOffReason reason, LocalDateTime start, LocalDateTime end);
 
     @Transactional
