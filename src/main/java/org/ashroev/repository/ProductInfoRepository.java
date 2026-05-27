@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ProductInfoRepository extends JpaRepository<ProductInfo, Integer> {
+    boolean existsByCategoryId(Integer categoryId);
 }

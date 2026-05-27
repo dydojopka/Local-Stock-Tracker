@@ -3,6 +3,8 @@ package org.ashroev.controller;
 import lombok.RequiredArgsConstructor;
 import org.ashroev.model.Category;
 import org.ashroev.repository.CategoryRepository;
+import org.ashroev.repository.ProductInfoRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +17,7 @@ import java.util.List;
 public class CategoryController {
 
     private final CategoryRepository categoryRepository;
+    private final ProductInfoRepository productInfoRepository;
 
     // Отображение списка категорий
     @GetMapping
@@ -41,9 +44,19 @@ public class CategoryController {
     // Удаление категории
     @PostMapping("/delete")
     public String deleteCategory(@RequestParam Integer id) {
-        // Здесь можно добавить проверку: если категория используется в продуктах, не удалять (или удалять каскадно)
-        // Пока делаем простое удаление для базового функционала
-        categoryRepository.deleteById(id);
-        return "redirect:/categories";
+        if (!categoryRepository.existsById(id)) {
+            return "redirect:/categories?deleteError=not_found";
+        }
+
+        if (productInfoRepository.existsByCategoryId(id)) {
+            return "redirect:/categories?deleteError=in_use";
+        }
+
+        try {
+            categoryRepository.deleteById(id);
+            return "redirect:/categories?deleted";
+        } catch (DataIntegrityViolationException e) {
+            return "redirect:/categories?deleteError=in_use";
+        }
     }
 }

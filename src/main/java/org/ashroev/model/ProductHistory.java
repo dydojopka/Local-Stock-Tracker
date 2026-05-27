@@ -13,7 +13,7 @@ public class ProductHistory {
 
     // Связываем с общей информацией о продукте (чтобы знать имя, категорию и т.д.)
     @ManyToOne
-    @JoinColumn(name = "product_info_id", nullable = false)
+    @JoinColumn(name = "product_info_id")
     private ProductInfo productInfo;
 
     // Сколько именно списали

@@ -16,6 +16,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     // Поиск всех партий по описанию продукта
     List<Product> findByProductInfo(ProductInfo productInfo);
 
+    boolean existsByProductInfoId(Integer productInfoId);
+
     // Найти продукты, срок годности которых попадает в заданный диапазон
     List<Product> findByExpiryDateBetween(LocalDate startDate, LocalDate endDate);
 }

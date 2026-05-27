@@ -15,6 +15,15 @@
         <div th:if="${param.error}" class="error-msg">
             Ошибка: Категория с таким названием уже существует!
         </div>
+        <div th:if="${param.deleteError != null and param.deleteError[0] == 'in_use'}" class="error-msg">
+            Категорию нельзя удалить: к ней привязаны продукты из справочника.
+        </div>
+        <div th:if="${param.deleteError != null and param.deleteError[0] == 'not_found'}" class="error-msg">
+            Категория не найдена.
+        </div>
+        <div th:if="${param.deleted != null}" class="success-msg">
+            Категория удалена.
+        </div>
 
         <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #ddd;">
             <h3>Добавить категорию</h3>

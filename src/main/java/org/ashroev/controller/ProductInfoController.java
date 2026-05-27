@@ -7,7 +7,10 @@ import org.ashroev.exception.ResourceNotFoundException;
 import org.ashroev.model.Category;
 import org.ashroev.model.ProductInfo;
 import org.ashroev.repository.CategoryRepository;
+import org.ashroev.repository.ProductHistoryRepository;
 import org.ashroev.repository.ProductInfoRepository;
+import org.ashroev.repository.ProductRepository;
+import org.ashroev.repository.ShoppingListItemRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -26,6 +29,9 @@ public class ProductInfoController {
 
     private final ProductInfoRepository productInfoRepository;
     private final CategoryRepository categoryRepository;
+    private final ProductRepository productRepository;
+    private final ProductHistoryRepository productHistoryRepository;
+    private final ShoppingListItemRepository shoppingListItemRepository;
 
     @GetMapping
     public String listProductInfos(Model model) {
@@ -73,8 +79,30 @@ public class ProductInfoController {
 
     @PostMapping("/delete")
     public String deleteProductInfo(@RequestParam Integer id) {
-        productInfoRepository.deleteById(id);
-        return "redirect:/directory";
+        if (!productInfoRepository.existsById(id)) {
+            return "redirect:/directory?deleteError=not_found";
+        }
+
+        if (productRepository.existsByProductInfoId(id)
+                || shoppingListItemRepository.existsByProductInfoId(id)) {
+            return "redirect:/directory?deleteError=in_use";
+        }
+
+        try {
+            detachHistoryFromProductInfo(id);
+            productInfoRepository.deleteById(id);
+            return "redirect:/directory?deleted";
+        } catch (DataIntegrityViolationException e) {
+            return "redirect:/directory?deleteError=in_use";
+        }
+    }
+
+    private void detachHistoryFromProductInfo(Integer id) {
+        try {
+            productHistoryRepository.detachProductInfo(id);
+        } catch (DataIntegrityViolationException e) {
+            productHistoryRepository.deleteByProductInfoId(id);
+        }
     }
 
     private void populateDirectoryModel(Model model) {

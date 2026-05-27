@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ShoppingListItemRepository extends JpaRepository<ShoppingListItem, Integer> {
+    boolean existsByProductInfoId(Integer productInfoId);
 }
