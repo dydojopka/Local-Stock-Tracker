@@ -2,9 +2,9 @@ package org.ashroev.dto;
 
 public record DashboardStatsResponse(
         long totalProducts,
-        double totalQuantity,
+        Double totalQuantity,
         long expiredCount,
-        double expiredQuantity,
+        Double expiredQuantity,
         long activeListsCount,
         long lowStockCount,
         int healthScore,

@@ -42,47 +42,6 @@ public class InventoryManager {
 
     private final ProductHistoryRepository productHistoryRepository;
 
-    @Transactional
-    public void writeOffProduct(Integer productId, double quantityToRemove, String actionType) {
-        // Получаем партию
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Продукт на складе не найден с ID: " + productId));
-
-        // Нельзя списать больше, чем есть на складе
-        if (quantityToRemove > product.getQuantity()) {
-            throw new IllegalArgumentException("Нельзя списать больше, чем есть в наличии");
-        }
-
-        // Запись в историю
-        if (!"DELETE".equalsIgnoreCase(actionType)) {
-            WriteOffReason reason;
-            if ("USED".equalsIgnoreCase(actionType)) {
-                reason = WriteOffReason.USED;
-            } else if ("EXPIRED".equalsIgnoreCase(actionType)) {
-                reason = WriteOffReason.EXPIRED;
-            } else {
-                throw new IllegalArgumentException("Неверная причина списания: " + actionType);
-            }
-
-            // Сохраняем историю
-            ProductHistory logEntry = new ProductHistory(
-                    product.getProductInfo(),
-                    quantityToRemove,
-                    reason,
-                    LocalDateTime.now()
-            );
-            productHistoryRepository.save(logEntry);
-        }
-
-        // Обновляем остаток
-        if (quantityToRemove == product.getQuantity()) {
-            productRepository.delete(product);
-        } else {
-            product.setQuantity(product.getQuantity() - quantityToRemove);
-            productRepository.save(product);
-        }
-    }
-
     /**
      * Добавление партии товара
      */
@@ -138,9 +97,9 @@ public class InventoryManager {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Продукт не найден"));
 
-        // Защита от ошибок double
-        double currentQty = Math.round(product.getQuantity() * 1000.0) / 1000.0;
-        double amountToOff = Math.round(amount * 1000.0) / 1000.0;
+        // Защита от ошибок Double
+        Double currentQty = Math.round(product.getQuantity() * 1000.0) / 1000.0;
+        Double amountToOff = Math.round(amount * 1000.0) / 1000.0;
 
         if (amountToOff <= 0) {
             throw new IllegalArgumentException("Количество для списания должно быть больше нуля");
@@ -169,7 +128,7 @@ public class InventoryManager {
             productHistoryRepository.save(logEntry);
         }
 
-        double newQuantity = currentQty - amountToOff;
+        Double newQuantity = currentQty - amountToOff;
 
         // Считаем остаток нулевым
         if (newQuantity < 0.001) {
@@ -191,7 +150,7 @@ public class InventoryManager {
         for (ProductInfo info : allProducts) {
             // Считаем остаток, ИГНОРИРУЯ просроченные продукты
             LocalDate today = LocalDate.now();
-            double currentTotal = productRepository.findByProductInfo(info).stream()
+            Double currentTotal = productRepository.findByProductInfo(info).stream()
                     // Оставляем только те партии, где срок годности еще не истек
                     .filter(p -> p.getExpiryDate() == null || !p.getExpiryDate().isBefore(today))
                     .mapToDouble(Product::getQuantity)
@@ -200,7 +159,7 @@ public class InventoryManager {
             // Проверка минимального остатка
             if (currentTotal < info.getMinQuantity()) {
                 // Вычисляем, сколько нужно докупить
-                double deficit = info.getMinQuantity() - currentTotal;
+                Double deficit = info.getMinQuantity() - currentTotal;
 
                 ShoppingListItem item = new ShoppingListItem();
                 item.setProductInfo(info);
@@ -237,19 +196,16 @@ public class InventoryManager {
     public List<Product> getExpiringProducts(int daysThreshold) {
         LocalDate today = LocalDate.now();
         LocalDate thresholdDate = today.plusDays(daysThreshold);
-        // Ищем продукты, у которых срок годности от сегодня до "сегодня + N дней"
-        return productRepository.findByExpiryDateBetween(today, thresholdDate).stream()
-                .filter(p -> p.getQuantity() > 0) // Игнорируем те, что уже списаны
-                .collect(Collectors.toList());
+        // База данных сама отфильтрует продукты по дате и количеству (> 0)
+        return productRepository.findByExpiryDateBetweenAndQuantityGreaterThan(today, thresholdDate, 0.0);
     }
 
     /**
      * Получить список уже просроченных продуктов, которые всё ещё числятся на складе
      */
     public List<Product> getExpiredProducts() {
-        return productRepository.findByExpiryDateBefore(LocalDate.now()).stream()
-                .filter(p -> p.getQuantity() > 0)
-                .collect(Collectors.toList());
+        // База данных вернет только просрочку, которая физически есть на складе
+        return productRepository.findByExpiryDateBeforeAndQuantityGreaterThan(LocalDate.now(), 0.0);
     }
 
     @Transactional
@@ -278,15 +234,13 @@ public class InventoryManager {
     public Map<String, Object> getDashboardStats() {
         Map<String, Object> stats = new HashMap<>();
 
-        // 1. Получаем только активные партии (где остаток > 0)
-        List<Product> activeProducts = productRepository.findAll().stream()
-                .filter(p -> p.getQuantity() > 0)
-                .collect(Collectors.toList());
+        // Получаем только активные партии из бд
+        List<Product> activeProducts = productRepository.findByQuantityGreaterThan(0.0);
 
         // --- МЕТРИКИ ВСЕГО НА СКЛАДЕ ---
         long totalBatches = activeProducts.size();
         // Считаем сумму всех штук/кг во всех активных партиях
-        double totalQuantity = activeProducts.stream()
+        Double totalQuantity = activeProducts.stream()
                 .mapToDouble(Product::getQuantity)
                 .sum();
 
@@ -299,7 +253,7 @@ public class InventoryManager {
                 .collect(Collectors.toList());
 
         long expiredBatchesCount = expiredProducts.size();
-        double expiredQuantitySum = expiredProducts.stream()
+        Double expiredQuantitySum = expiredProducts.stream()
                 .mapToDouble(Product::getQuantity)
                 .sum();
 
@@ -318,7 +272,7 @@ public class InventoryManager {
 
         long lowStockCount = productInfoRepository.findAll().stream()
                 .filter(info -> {
-                    double inStock = currentStock.getOrDefault(info, 0.0);
+                    Double inStock = currentStock.getOrDefault(info, 0.0);
                     return inStock < info.getMinQuantity();
                 })
                 .count();
@@ -327,7 +281,7 @@ public class InventoryManager {
         // Процент испорченного товара от общего объема
         int healthScore = 100;
         if (totalQuantity > 0) {
-            double expiredPercent = (expiredQuantitySum / totalQuantity) * 100;
+            Double expiredPercent = (expiredQuantitySum / totalQuantity) * 100;
             // К примеру, каждые 5% просроченного объема снижают здоровье на 10 пунктов,
             // а каждая позиция с низким запасом (lowStock) — на 5 пунктов.
             healthScore = 100 - (int) (expiredPercent * 2) - (int) (lowStockCount * 5);

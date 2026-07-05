@@ -77,7 +77,7 @@ class InventoryManagerTest {
         assertThat(product.getQuantity()).isEqualTo(1.0);
     }
 
-    private Product productWithQuantity(ProductInfo productInfo, double quantity) {
+    private Product productWithQuantity(ProductInfo productInfo, Double quantity) {
         Product product = new Product();
         product.setProductInfo(productInfo);
         product.setQuantity(quantity);

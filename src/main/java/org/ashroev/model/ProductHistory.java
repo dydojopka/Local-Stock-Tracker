@@ -17,7 +17,7 @@ public class ProductHistory {
     private ProductInfo productInfo;
 
     // Сколько именно списали
-    private double quantity;
+    private Double quantity;
 
     // Причина: USED или EXPIRED
     @Enumerated(EnumType.STRING)
@@ -29,7 +29,7 @@ public class ProductHistory {
     public ProductHistory() {
     }
 
-    public ProductHistory(ProductInfo productInfo, double quantity, WriteOffReason reason, LocalDateTime actionDate) {
+    public ProductHistory(ProductInfo productInfo, Double quantity, WriteOffReason reason, LocalDateTime actionDate) {
         this.productInfo = productInfo;
         this.quantity = quantity;
         this.reason = reason;
@@ -43,8 +43,8 @@ public class ProductHistory {
     public ProductInfo getProductInfo() { return productInfo; }
     public void setProductInfo(ProductInfo productInfo) { this.productInfo = productInfo; }
 
-    public double getQuantity() { return quantity; }
-    public void setQuantity(double quantity) { this.quantity = quantity; }
+    public Double getQuantity() { return quantity; }
+    public void setQuantity(Double quantity) { this.quantity = quantity; }
 
     public WriteOffReason getReason() { return reason; }
     public void setReason(WriteOffReason reason) { this.reason = reason; }

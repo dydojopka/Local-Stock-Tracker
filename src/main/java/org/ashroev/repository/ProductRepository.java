@@ -20,4 +20,10 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
 
     // Найти продукты, срок годности которых попадает в заданный диапазон
     List<Product> findByExpiryDateBetween(LocalDate startDate, LocalDate endDate);
+
+    // Найти продукты в диапазоне дат И с остатком больше нуля
+    List<Product> findByExpiryDateBetweenAndQuantityGreaterThan(LocalDate startDate, LocalDate endDate, Double quantity);
+
+    // Найти просроченные продукты И с остатком больше нуля
+    List<Product> findByExpiryDateBeforeAndQuantityGreaterThan(LocalDate date, Double quantity);
 }
